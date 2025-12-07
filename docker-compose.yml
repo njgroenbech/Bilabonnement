@@ -1,0 +1,80 @@
+# Volumes need to be added
+# dependencies also need to be added, which will wait for services to be ready before initializing
+# add environments for DB connection in docker network
+
+services:
+  gateway:
+    container_name: api_gateway
+    build:
+      context: ./APIGateway
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001" # Ports subject to change, will come eventually
+    networks:
+      - microservices-network
+
+  authorization-service:
+    container_name: authorization_service
+    build:
+      context: ./AuthorizationService 
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5002"
+    networks:
+      - microservices-network
+
+  carfleet-service:
+    container_name: carfleet_service
+    build:
+      context: ./CarFleetService
+      dockerfile: Dockerfile
+    ports:
+      - "5003:5003"
+    networks: 
+    - microservices-network
+
+  contract-service:
+    container_name: contract_service
+    build:
+      context: ./ContractService
+      dockerfile: Dockerfile
+    ports:
+      - "5004:5004"
+    networks: 
+      - microservices-network
+
+  customer-information-service:
+    container_name: customer_information_service
+    build:
+      context: ./CustomerInformationService
+      dockerfile: Dockerfile
+    ports:
+      - "5005:5005"
+    networks: 
+      - microservices-network
+
+  damage-report-service:
+    container_name: damage_report_service
+    build:
+      context: ./DamageReportService
+      dockerfile: Dockerfile
+    ports:
+      - "5006:5006"
+    networks: 
+      - microservices-network
+
+  frontend-service:
+    container_name: frontend_service
+    build:
+      context: ./FrontendService
+      dockerfile: Dockerfile
+    ports:
+      - "5007:5007"
+    networks: 
+      - microservices-network
+
+networks:
+  microservices-network:
+    driver: bridge
+
+    
