@@ -9,8 +9,3 @@ COPY . .
 
 # Perhaps expose a port here in the future
 CMD [ "python", "app.py" ]
-
-
-# For testing purposes
-FROM alpine:latest
-   CMD ["tail", "-f", "/dev/null"]

@@ -30,8 +30,31 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5003:5003"
+    environment:
+      MYSQL_HOST: carfleet-db
+      MYSQL_USER: user_db
+      MYSQL_PASSWORD: password
+      MYSQL_DB: carfleet_db
+    depends_on:
+      - carfleet-db
     networks: 
     - microservices-network
+
+  carfleet-db:
+    container_name: mysql_carfleet_db
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: yani213
+      MYSQL_DATABASE: carfleet_db
+      MYSQL_USER: user_db
+      MYSQL_PASSWORD: password
+    ports: 
+      - "3307:3306"
+    volumes:
+      - carfleet-db:/var/lib/mysql
+      - ./CarFleetService/db_init:/docker-entrypoint-initdb.d
+    networks:
+      - microservices-network
 
   contract-service:
     container_name: contract_service
@@ -72,6 +95,9 @@ services:
       - "5007:5007"
     networks: 
       - microservices-network
+
+volumes:
+  carfleet-db:
 
 networks:
   microservices-network:
