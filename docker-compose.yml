@@ -9,7 +9,7 @@ services:
       context: ./APIGateway
       dockerfile: Dockerfile
     ports:
-      - "5001:5001" # Ports subject to change, will come eventually
+      - "5001:5001"
     networks:
       - microservices-network
 
@@ -38,7 +38,7 @@ services:
     depends_on:
       - carfleet-db
     networks: 
-    - microservices-network
+      - microservices-network
 
   carfleet-db:
     container_name: mysql_carfleet_db
@@ -56,6 +56,23 @@ services:
     networks:
       - microservices-network
 
+  contract-db:
+    container_name: mysql_contract_db
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: contract_db
+      MYSQL_USER: user_db
+      MYSQL_PASSWORD: password
+    ports:
+      - "3308:3306"
+    volumes:
+      - contract-db:/var/lib/mysql
+      - ./ContractService/db_init:/docker-entrypoint-initdb.d
+    networks:
+      - microservices-network
+
   contract-service:
     container_name: contract_service
     build:
@@ -63,6 +80,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5004:5004"
+    environment:
+      MYSQL_HOST: contract-db
+      MYSQL_USER: user_db
+      MYSQL_PASSWORD: password
+      MYSQL_DB: contract_db
+    depends_on:
+      - contract-db
     networks: 
       - microservices-network
 
@@ -98,9 +122,8 @@ services:
 
 volumes:
   carfleet-db:
+  contract-db:
 
 networks:
   microservices-network:
     driver: bridge
-
-    

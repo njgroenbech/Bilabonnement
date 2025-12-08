@@ -19,11 +19,8 @@ def home():
 def cars():
     try:
         cars_list = get_cars()
-        return jsonify({
-            "success": True,
-            "count": len(cars_list),
-            "cars": cars_list
-        }), 200
+        return jsonify(cars_list), 200
+    
     except Exception as e:
         return jsonify({
             "success": False,
@@ -77,7 +74,7 @@ def fetch_car_by_id(car_id):
                 "error": "Car not found"
             }), 404
         
-        return jsonify(car)
+        return jsonify(car), 200
 
     except Exception as e:
         return jsonify({
