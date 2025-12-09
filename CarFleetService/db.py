@@ -3,7 +3,7 @@ import os
 
 def get_connection():
     return mysql.connector.connect(
-        host=os.getenv("MYSQL_HOST", "carfleet-db"),
+        host=os.getenv("MYSQL_HOST", "carfleet-db"), # second arg is to pass default value
         user=os.getenv("MYSQL_USER", "user_db"),
         password=os.getenv("MYSQL_PASSWORD", "password"),
         database=os.getenv("MYSQL_DB", "carfleet_db")
@@ -17,7 +17,7 @@ def get_cars():
     cursor.execute("SELECT * FROM cars;")
     rows = cursor.fetchall() # fetches all rows
 
-    cursor.close()
+    cursor.close() # close cursor after query execution
     conn.close()
 
     return rows
@@ -30,7 +30,7 @@ def add_car(brand, model, year, license_plate, km_driven, fuel_type, status, pur
                    (brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, location))
     
     car_id = cursor.lastrowid
-    conn.commit()
+    conn.commit() # Insert is temporary, commit makes it permanent
     cursor.close()
     conn.close()
     
@@ -38,21 +38,34 @@ def add_car(brand, model, year, license_plate, km_driven, fuel_type, status, pur
 
 def get_car_by_id(car_id):
     conn = get_connection()
-    cursor= conn.cursor(dictionary=True)
+    cursor = conn.cursor(dictionary=True)
 
     cursor.execute("SELECT * FROM cars WHERE car_id = %s", (car_id,)) # comma after id to create tuple (so it works with sqlconnector)
     row = cursor.fetchone()
 
     cursor.close()
     conn.close()
+    
     return row
 
-# perhaps an unnecessary func
 def get_cars_by_brand(brand):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM cars WHERE brand = %s", (brand))
+    cursor.execute("SELECT * FROM cars WHERE brand = %s", (brand,))
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return rows
+
+# sort car by price
+def get_cars_price_per_month(min_price, max_price):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM cars WHERE sub_price_per_month BETWEEN %s AND %s ORDER BY sub_price_per_month ASC", (min_price, max_price))
     rows = cursor.fetchall()
 
     cursor.close()

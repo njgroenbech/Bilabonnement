@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from db import get_cars, add_car, get_car_by_id
+from db import get_cars, add_car, get_car_by_id, get_cars_by_brand, get_cars_price_per_month
 import mysql.connector
 import os
 
@@ -10,7 +10,6 @@ app = Flask(__name__)
 def home():
     return jsonify({
         "hello": "Hi there!",
-        "service": "CarFleet Service",
         "status": "running"
     })
 
@@ -64,7 +63,7 @@ def insert_car():
         }), 500
 
 # fetches car by id
-@app.route('/cars/<int:car_id>')
+@app.route('/cars/<int:car_id>', methods=["GET"])
 def fetch_car_by_id(car_id):
     try: 
         car = get_car_by_id(car_id)
@@ -82,6 +81,46 @@ def fetch_car_by_id(car_id):
             "error": str(e)
         }), 500
 
+# fetch car by brand
+@app.route('/cars/<string:brand>', methods=["GET"])
+def fetch_car_by_brand(brand):
+    try:
+        car_by_brand = get_cars_by_brand(brand)
+
+        if len(car_by_brand) == 0: # if it returns an empty list
+            return jsonify({
+                "error": "Brand doesn't exist"
+            }), 404
+        
+        return jsonify(car_by_brand), 200
+
+    except Exception as e: 
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+    
+# fetch cars by price
+@app.route('/cars/price')
+def fetch_cars_price_per_month():
+    try: 
+        min_price = request.args.get('min_price', type=int)
+        max_price = request.args.get('max_price', type=int)
+
+        if min_price is None or max_price is None:
+            return jsonify({
+                "error": "Need min and max price"
+            }), 400
+        
+        res = get_cars_price_per_month(min_price, max_price)
+
+        return jsonify(res), 200
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=True)
