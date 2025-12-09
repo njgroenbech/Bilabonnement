@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from db import get_cars, add_car, get_car_by_id, get_cars_by_brand, get_cars_price_per_month
+from db import get_cars, add_car, get_car_by_id, get_cars_by_brand, get_cars_price_per_month, get_cars_by_brand_model_status
 
 app = Flask(__name__)
 
@@ -10,7 +10,7 @@ def home():
         "status": "running"
     })
 
-# fetches all cars
+# endpoint for all cars
 @app.route('/cars', methods=["GET"])
 def cars():
     try:
@@ -23,7 +23,7 @@ def cars():
             "error": str(e)
         }), 500
 
-# add car to db
+# add new car to fleet
 @app.route('/cars', methods=["POST"])
 def insert_car():
     try:
@@ -59,7 +59,7 @@ def insert_car():
             "error": str(e)
         }), 500
 
-# fetches car by id
+# endpoint for car by id
 @app.route('/cars/<int:car_id>', methods=["GET"])
 def fetch_car_by_id(car_id):
     try: 
@@ -78,7 +78,7 @@ def fetch_car_by_id(car_id):
             "error": str(e)
         }), 500
 
-# fetch car by brand
+# endpoint for car by brand
 @app.route('/cars/<string:brand>', methods=["GET"])
 def fetch_car_by_brand(brand):
     try:
@@ -97,7 +97,7 @@ def fetch_car_by_brand(brand):
             "error": str(e)
         }), 500
     
-# fetch cars by price
+# endpoint for cars by price
 @app.route('/cars/price')
 def fetch_cars_price_per_month():
     try: 
@@ -118,6 +118,27 @@ def fetch_cars_price_per_month():
             "success": False,
             "error": str(e)
         }), 500
+    
+# returns available cars matching exact specifications for contract creation
+@app.route('/cars/<string:brand>/<string:model>/<int:year>/<string:fuel_type>', methods=["GET"])
+def cars_for_contract_service(brand, model, year, fuel_type):
+    try:
+        cars_list = get_cars_by_brand_model_status(brand, model, year, fuel_type)
+
+        if not cars_list:
+            return jsonify({
+                "Success": False,
+                "Message": "Could not find cars within parameters"
+            }), 404
+
+        return jsonify(cars_list), 200
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=True)

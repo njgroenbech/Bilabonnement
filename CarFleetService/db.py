@@ -72,3 +72,17 @@ def get_cars_price_per_month(min_price, max_price):
     conn.close()
 
     return rows
+
+# return cars based on brand, model and availability (for ContractService to be able write up a car without id)
+def get_cars_by_brand_model_status(brand, model, year, fuel_type):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM cars WHERE brand = %s AND model = %s AND year = %s AND fuel_type = %s AND status = 'available'", 
+                   (brand, model, year, fuel_type))
+    cars = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return cars

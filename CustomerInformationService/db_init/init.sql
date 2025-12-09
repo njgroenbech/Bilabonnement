@@ -1,5 +1,5 @@
 -- create customer information table
--- Todo: change cpr_number, registration_number and account_number to varbinary and possible encryption? using cryptography library
+-- Todo: change cpr_number, registration_number and account_number to VARBINARY and possible encryption? using cryptography library
 CREATE TABLE IF NOT EXISTS customer_info (
     customer_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,

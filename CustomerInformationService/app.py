@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from db import get_all_customers, create_customer
+from db import get_all_customers, create_customer, get_customer_by_id, get_customer_id_by_email
 
 app = Flask(__name__)
 
@@ -58,7 +58,43 @@ def add_customer():
             "Success": False,
             "Error": str(e)
         })
+
+# fetch customer by id
+@app.route('/customers/<int:customer_id>', methods=["GET"])
+def customer_by_id(customer_id):
+    try:
+        res = get_customer_by_id(customer_id)
+        if res is None:
+            return jsonify({
+                "Error": "Customer not found"
+            }), 404
+
+        return jsonify(res), 200
+
+    except Exception as e:
+        return jsonify({
+            "Success": False,
+            "error": str(e)
+        })
     
+# fetch customer id by email
+@app.route('/customers/<string:email>', methods=["GET"])
+def id_by_email(email):
+    try:
+        res = get_customer_id_by_email(email)
+        if res is None:
+            return jsonify({
+                "Error": "Customer not found"
+            }), 404
+        
+        return jsonify(res), 200
+
+    except Exception as e:
+        return jsonify({
+            "Success": False,
+            "error": str(e)
+        })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5005, debug=True)
     
