@@ -7,5 +7,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Perhaps expose a port here in the future
+EXPOSE 5005
 CMD [ "python", "app.py" ]

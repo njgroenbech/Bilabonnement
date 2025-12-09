@@ -1,11 +1,8 @@
 from flask import Flask, request, jsonify
 from db import get_cars, add_car, get_car_by_id, get_cars_by_brand, get_cars_price_per_month
-import mysql.connector
-import os
 
 app = Flask(__name__)
 
-# standard endpoint
 @app.route('/')
 def home():
     return jsonify({
@@ -27,7 +24,7 @@ def cars():
         }), 500
 
 # add car to db
-@app.route('/cars/add', methods=["POST"])
+@app.route('/cars', methods=["POST"])
 def insert_car():
     try:
         data = request.get_json()

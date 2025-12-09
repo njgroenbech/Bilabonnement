@@ -30,7 +30,7 @@ def add_car(brand, model, year, license_plate, km_driven, fuel_type, status, pur
                    (brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, location))
     
     car_id = cursor.lastrowid
-    conn.commit() # Insert is temporary, commit makes it permanent
+    conn.commit() # insert is temporary, commit makes it permanent
     cursor.close()
     conn.close()
     
