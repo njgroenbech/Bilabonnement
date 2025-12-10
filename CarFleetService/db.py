@@ -73,7 +73,7 @@ def get_cars_price_per_month(min_price, max_price):
 
     return rows
 
-# return cars based on brand, model and availability (for ContractService to be able write up a car without id)
+# return cars based on brand, model, and fuel_type and availability (for ContractService to be able write up a car without id)
 def get_cars_by_brand_model_status(brand, model, year, fuel_type):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
@@ -86,3 +86,16 @@ def get_cars_by_brand_model_status(brand, model, year, fuel_type):
     conn.close()
 
     return cars
+
+def update_car_status(car_id, status):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("UPDATE cars SET status = %s WHERE car_id = %s", (status, car_id))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return True
+

@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from db import get_cars, add_car, get_car_by_id, get_cars_by_brand, get_cars_price_per_month, get_cars_by_brand_model_status
+from db import get_cars, add_car, get_car_by_id, get_cars_by_brand, get_cars_price_per_month, get_cars_by_brand_model_status, update_car_status
 
 app = Flask(__name__)
 
@@ -138,7 +138,34 @@ def cars_for_contract_service(brand, model, year, fuel_type):
             "success": False,
             "error": str(e)
         }), 500
+    
+@app.route('/cars/<int:car_id>/status', methods=["PATCH"])
+def update_car_status_route(car_id):
+    try:
+        data = request.get_json()
+        new_status = data.get('status')
 
+        valid_status = ["available", "rented", "maintenance"]
+        
+        if new_status not in valid_status:
+            return jsonify({
+                "Success": False,
+                "Error": f"Status not valid, must be one of: {valid_status}"
+            }), 400
+        
+        update_car_status(car_id, new_status)
+
+        return jsonify({
+            "Success": True,
+            "car_id": car_id,
+            "status": new_status
+        }), 200
+    
+    except Exception as e:
+        return jsonify({
+            "Success": False,
+            "Error": str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=True)

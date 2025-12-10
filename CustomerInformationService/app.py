@@ -77,7 +77,7 @@ def customer_by_id(customer_id):
             "error": str(e)
         })
     
-# fetch customer id by email
+# fetch customer id by email (for contract)
 @app.route('/customers/<string:email>', methods=["GET"])
 def id_by_email(email):
     try:
