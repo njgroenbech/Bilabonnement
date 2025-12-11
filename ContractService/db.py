@@ -14,37 +14,34 @@ def get_connection():
 def create_contract(customer_id, car_id, start_date, end_date, sub_price_per_month):
     conn = get_connection()
     cursor = conn.cursor()
-
     cursor.execute("""
         INSERT INTO contracts (
             customer_id,
             car_id,
             start_date,
             end_date,
-            sub_price_per_month
+            sub_price_per_month,
+            status
         )
-        VALUES (%s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s)
     """, (
         customer_id,
         car_id,
         start_date,
         end_date,
-        sub_price_per_month
+        sub_price_per_month,
+        'active'
     ))
-
     conn.commit()
     contract_id = cursor.lastrowid
-
     cursor.close()
     conn.close()
-
     return contract_id
 
 
 def get_all_contracts():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-
     cursor.execute("""
         SELECT 
             c.contract_id,
@@ -52,13 +49,36 @@ def get_all_contracts():
             c.car_id,
             c.start_date,
             c.end_date,
-            c.sub_price_per_month
+            c.sub_price_per_month,
+            c.status
         FROM contracts c
     """)
-
     rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return rows
+
+def get_contract_by_id(contract_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM contracts WHERE contract_id = %s", (contract_id,))
+    row = cursor.fetchone()
 
     cursor.close()
     conn.close()
+    return row
 
-    return rows
+
+def delete_contract(contract_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM contracts WHERE contract_id = %s", (contract_id,))
+    conn.commit()
+
+    affected = cursor.rowcount
+
+    cursor.close()
+    conn.close()
+    return affected > 0

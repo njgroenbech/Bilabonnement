@@ -7,6 +7,7 @@ from db import (
     get_cars_price_per_month,
     get_cars_by_brand_model_status,
     update_car_status,
+    delete_car,
 )
 
 app = Flask(__name__)
@@ -205,5 +206,21 @@ def update_car_status_route(car_id):
             "Error": str(e)
         }), 500
 
+@app.route("/cars/<int:car_id>", methods=["DELETE"])
+def delete_car_route(car_id):  # Omdøb for at undgå konflikt
+    try:
+        success = delete_car(car_id)
+        
+        if success:
+            return jsonify({"success": True}), 200
+        else:
+            return jsonify({"success": False, "error": "Car not found"}), 404
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=True)

@@ -1,7 +1,6 @@
 import mysql.connector
 import os
 
-
 def get_connection():
     return mysql.connector.connect(
         host=os.getenv("MYSQL_HOST", "customer_information_db"),
@@ -9,7 +8,6 @@ def get_connection():
         password=os.getenv("MYSQL_PASSWORD", "password"),
         database=os.getenv("MYSQL_DB", "customer_information_db"),
     )
-
 
 def get_all_customers():
     conn = get_connection()
@@ -21,7 +19,6 @@ def get_all_customers():
     cursor.close()
     conn.close()
     return customers
-
 
 def create_customer(
     name,
@@ -65,7 +62,6 @@ def create_customer(
 
     return customer_id
 
-
 def get_customer_by_id(id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
@@ -76,7 +72,6 @@ def get_customer_by_id(id):
     cursor.close()
     conn.close()
     return customer
-
 
 def get_customer_id_by_email(email):
     conn = get_connection()
@@ -94,3 +89,13 @@ def get_customer_id_by_email(email):
     cursor.close()
     conn.close()
     return res
+
+def delete_customer(customer_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM customer_info WHERE customer_id = %s", (customer_id,))
+    conn.commit()
+    deleted = cursor.rowcount
+    cursor.close()
+    conn.close()
+    return deleted > 0

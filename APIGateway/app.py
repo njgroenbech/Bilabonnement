@@ -61,6 +61,9 @@ def update_car_status(car_id):
         request.get_json()
     )
 
+@app.route("/cars/<car_id>", methods=["DELETE"])
+def delete_car_gateway(car_id):
+    return forward_request("DELETE", f"{CARFLEET_URL}/cars/{car_id}")
 
 # CUSTOMER INFORMATION SERVICE ROUTES
 CUSTOMER_URL = "http://customer-information-service:5005"
@@ -81,6 +84,10 @@ def get_customer_by_id(customer_id):
 def get_customer_by_email(email):
     return forward_request("GET", f"{CUSTOMER_URL}/customers/email/{email}")
 
+@app.route("/customers/<customer_id>", methods=["DELETE"])
+def delete_customer_gateway(customer_id):
+    return forward_request("DELETE", f"{CUSTOMER_URL}/customers/{customer_id}")
+
 
 # CONTRACT SERVICE ROUTES
 CONTRACT_URL = "http://contract-service:5004"
@@ -92,6 +99,10 @@ def get_contracts():
 @app.route("/contracts", methods=["POST"])
 def create_contract():
     return forward_request("POST", f"{CONTRACT_URL}/contracts", request.get_json())
+
+@app.route("/contracts/<contract_id>", methods=["DELETE"])
+def delete_contract_gateway(contract_id):
+    return forward_request("DELETE", f"{CONTRACT_URL}/contracts/{contract_id}")
 
 
 # DAMAGE REPORT SERVICE

@@ -1,10 +1,14 @@
 from flask import Flask, request, jsonify
+import requests
 from db import (
     get_all_customers,
     create_customer,
     get_customer_by_id,
-    get_customer_id_by_email
+    get_customer_id_by_email,
+    delete_customer,
 )
+
+CONTRACT_URL = "http://contract-service:5004" 
 
 app = Flask(__name__)
 
@@ -88,6 +92,43 @@ def get_customer_email(email):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
+@app.route("/customers/<int:customer_id>", methods=["DELETE"])
+def delete_customer_route(customer_id):
+    try:
+        # 1. Tjek om kunden har kontrakter
+        contracts_response = requests.get(f"{CONTRACT_URL}/contracts")
+        
+        if contracts_response.status_code == 200:
+            contracts = contracts_response.json()
+            customer_contracts = [
+                c for c in contracts 
+                if c.get('customer_id') == customer_id
+            ]
+            
+            # 2. Slet alle kundens kontrakter først
+            for contract in customer_contracts:
+                delete_response = requests.delete(
+                    f"{CONTRACT_URL}/contracts/{contract['contract_id']}"
+                )
+                if delete_response.status_code != 200:
+                    return jsonify({
+                        "success": False, 
+                        "error": f"Failed to delete contract {contract['contract_id']}"
+                    }), 500
+        
+        # 3. Slet kunden
+        success = delete_customer(customer_id)
+        
+        if success:
+            return jsonify({"success": True}), 200
+        else:
+            return jsonify({"success": False, "error": "Customer not found"}), 404
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+    
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5005, debug=True)

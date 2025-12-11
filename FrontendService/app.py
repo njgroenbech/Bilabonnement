@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
+import time
 from datetime import datetime
 
 GATEWAY_URL = "http://api_gateway:5001"
@@ -333,6 +334,15 @@ def render_page_header(title: str, subtitle: str):
         unsafe_allow_html=True,
     )
 
+def api_delete(endpoint: str):
+    try:
+        r = requests.delete(f"{GATEWAY_URL}{endpoint}", timeout=5)
+        if r.status_code in (200, 204):
+            return True, None
+        return False, f"Error: {r.status_code} - {r.text}"
+    except Exception as e:
+        return False, str(e)
+    
 # Navigation Header
 def render_header(current_page: str):
     col_logo, col_home, col_spacer, col_nav1, col_nav2, col_nav3 = st.columns([2.1, 0.5, 4.5, 1.2, 1.2, 1.2])
@@ -530,7 +540,54 @@ def cars_page():
                 f"<p style='color: #64748b; margin: 1rem 0;'>Showing <strong>{len(df)}</strong> vehicles</p>",
                 unsafe_allow_html=True,
             )
-            st.dataframe(df, use_container_width=True, hide_index=True, height=500)
+            
+            # Vis dataframe
+            st.data_editor(
+                df,
+                use_container_width=True,
+                hide_index=True,
+                height=400,
+                disabled=df.columns.tolist(),
+                num_rows="fixed",
+                key="car_table"
+            )
+
+            # Delete sektion under tabellen
+            st.markdown("---")
+            
+            col1, col2, col3 = st.columns([2, 1, 2])
+            
+            with col2:
+                # Dropdown til at vælge car til sletning
+                car_options = {
+                    f"{c['brand']} {c['model']} - {c['license_plate']}": c['car_id']
+                    for c in cars
+                }
+                
+                selected_to_delete = st.selectbox(
+                    "Select vehicle to delete:",
+                    options=[""] + list(car_options.keys()),
+                    format_func=lambda x: "Select a vehicle..." if x == "" else x,
+                    key="car_delete_select"
+                )
+                
+                if selected_to_delete and selected_to_delete != "":
+                    car_id = car_options[selected_to_delete]
+                    
+                    if st.button(
+                        "🗑️ Delete Selected Vehicle",
+                        type="primary",
+                        use_container_width=True,
+                        key="car_delete_btn"
+                    ):
+                        with st.spinner("Deleting vehicle..."):
+                            _, err = api_delete(f"/cars/{car_id}")
+                            if err:
+                                st.error(f"❌ Failed to delete: {err}")
+                            else:
+                                st.success(f"✅ Vehicle deleted successfully!")
+                                time.sleep(0.5)
+                                st.rerun()
         else:
             st.info(
                 "ℹ️ No vehicles found in the fleet. Add your first vehicle to get started!"
@@ -591,7 +648,7 @@ def cars_page():
                         "year": int(year),
                         "license_plate": license_plate,
                         "km_driven": int(km_driven),
-                        "fuel_type": fuel_type.lower(),  # matcher ENUM
+                        "fuel_type": fuel_type.lower(),
                         "status": status,
                         "purchase_price": int(purchase_price),
                         "sub_price_per_month": int(sub_price_per_month),
@@ -613,15 +670,39 @@ def customers_page():
 
     with tab1:
         customers, error = api_get("/customers")
+        contracts, _ = api_get("/contracts")
+        
         if error:
             st.error(f"❌ {error}")
         elif customers:
             df = pd.DataFrame(customers)
+            
+            # Find customers with active contracts
+            active_customer_ids = []
+            if contracts:
+                active_customer_ids = [
+                    c['customer_id'] for c in contracts 
+                    if c.get('status') == 'active'
+                ]
+            
+            # Tilføj kolonne til dataframe
+            df['has_active_contract'] = df['customer_id'].isin(active_customer_ids)
 
-            search = st.text_input(
-                "🔍 Search customers",
-                placeholder="Search by name, email, or CPR number...",
-            )
+            # Filter options
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                search = st.text_input(
+                    "🔍 Search customers",
+                    placeholder="Search by name, email, or CPR number...",
+                )
+            with col2:
+                filter_option = st.selectbox(
+                    "Filter",
+                    ["All Customers", "Active Contracts", "Available"],
+                    key="customer_filter"
+                )
+            
+            # Apply search filter
             if search:
                 search_lower = search.lower()
                 mask = df.apply(
@@ -632,12 +713,65 @@ def customers_page():
                     axis=1,
                 )
                 df = df[mask]
+            
+            # Apply contract status filter
+            if filter_option == "Active Contracts":
+                df = df[df['has_active_contract'] == True]
+            elif filter_option == "Available":
+                df = df[df['has_active_contract'] == False]
 
             st.markdown(
                 f"<p style='color: #64748b; margin: 1rem 0;'>Showing <strong>{len(df)}</strong> customers</p>",
                 unsafe_allow_html=True,
             )
-            st.dataframe(df, use_container_width=True, hide_index=True, height=500)
+            
+            # Vis dataframe
+            st.data_editor(
+                df,
+                use_container_width=True,
+                hide_index=True,
+                height=400,
+                disabled=df.columns.tolist(),
+                num_rows="fixed",
+                key="customer_table"
+            )
+
+            # Delete sektion under tabellen
+            st.markdown("---")
+            
+            col1, col2, col3 = st.columns([2, 1, 2])
+            
+            with col2:
+                # Dropdown til at vælge customer til sletning
+                customer_options = {
+                    f"{c['name']} {c['last_name']} - {c['email']}": c['customer_id']
+                    for c in customers
+                }
+                
+                selected_to_delete = st.selectbox(
+                    "Select customer to delete:",
+                    options=[""] + list(customer_options.keys()),
+                    format_func=lambda x: "Select a customer..." if x == "" else x,
+                    key="customer_delete_select"
+                )
+                
+                if selected_to_delete and selected_to_delete != "":
+                    customer_id = customer_options[selected_to_delete]
+                    
+                    if st.button(
+                        "🗑️ Delete Selected Customer",
+                        type="primary",
+                        use_container_width=True,
+                        key="customer_delete_btn"
+                    ):
+                        with st.spinner("Deleting customer..."):
+                            _, err = api_delete(f"/customers/{customer_id}")
+                            if err:
+                                st.error(f"❌ Failed to delete: {err}")
+                            else:
+                                st.success(f"✅ Customer deleted successfully!")
+                                time.sleep(0.5)
+                                st.rerun()
         else:
             st.info("ℹ️ No customers found. Add your first customer to get started!")
 
@@ -718,28 +852,85 @@ def contracts_page():
 
     tab1, tab2 = st.tabs(["📋 All Contracts", "➕ New Contract"])
 
+    # ======================================================
     # TAB 1 — ALL CONTRACTS
+    # ======================================================
     with tab1:
         contracts, error = api_get("/contracts")
+
         if error:
             st.error(f"❌ {error}")
+
         elif contracts:
             df = pd.DataFrame(contracts)
+
             st.markdown(
-                f"<p style='color: #64748b; margin: 1rem 0;'>Showing <strong>{len(df)}</strong> contracts</p>",
+                f"<p style='color: #64748b; margin: 1rem 0;'>"
+                f"Showing <strong>{len(df)}</strong> contracts</p>",
                 unsafe_allow_html=True,
             )
-            st.dataframe(df, use_container_width=True, hide_index=True, height=500)
+
+            # Vis dataframe
+            st.data_editor(
+                df,
+                use_container_width=True,
+                hide_index=True,
+                height=400,
+                disabled=df.columns.tolist(),
+                num_rows="fixed",
+                key="contract_table"
+            )
+
+            # Delete sektion under tabellen
+            st.markdown("---")
+            
+            col1, col2, col3 = st.columns([2, 1, 2])
+            
+            with col2:
+                # Dropdown til at vælge contract til sletning
+                contract_options = {
+                    f"Contract #{c['contract_id']} - Customer #{c.get('customer_id', 'N/A')}": c['contract_id']
+                    for c in contracts
+                }
+                
+                selected_to_delete = st.selectbox(
+                    "Select contract to delete:",
+                    options=[""] + list(contract_options.keys()),
+                    format_func=lambda x: "Select a contract..." if x == "" else x,
+                    key="contract_delete_select"
+                )
+                
+                if selected_to_delete and selected_to_delete != "":
+                    contract_id = contract_options[selected_to_delete]
+                    
+                    if st.button(
+                        "🗑️ Delete Selected Contract",
+                        type="primary",
+                        use_container_width=True,
+                        key="contract_delete_btn"
+                    ):
+                        with st.spinner("Deleting contract..."):
+                            _, err = api_delete(f"/contracts/{contract_id}")
+                            if err:
+                                st.error(f"❌ Failed to delete: {err}")
+                            else:
+                                st.success(f"✅ Contract deleted successfully!")
+                                time.sleep(0.5)
+                                st.rerun()
+
         else:
             st.info("ℹ️ No contracts found. Create your first contract to get started!")
 
-
+    # ======================================================
     # TAB 2 — NEW CONTRACT
+    # ======================================================
     with tab2:
         st.markdown("### 📝 Create New Contract")
 
-        # ------- Hent customers -------
+        # ---------- LOAD CUSTOMERS ----------
         customers, cust_error = api_get("/customers")
+        contracts, _ = api_get("/contracts")
+        
         if cust_error:
             st.error("❌ Failed to load customers")
             return
@@ -748,10 +939,27 @@ def contracts_page():
             st.warning("⚠ No customers exist. Create a customer before making a contract.")
             return
 
-        # Dropdown med kunder
+        # Filter out customers with active contracts
+        active_customer_ids = []
+        if contracts:
+            active_customer_ids = [
+                c['customer_id'] for c in contracts 
+                if c.get('status') == 'active'
+            ]
+        
+        available_customers = [
+            c for c in customers 
+            if c['customer_id'] not in active_customer_ids
+        ]
+
+        if not available_customers:
+            st.warning("⚠ No available customers. All customers already have active contracts.")
+            st.info("💡 Tip: Delete an existing contract or add a new customer to create a contract.")
+            return
+
         customer_options = {
             f"{c['name']} {c['last_name']} ({c['email']})": c
-            for c in customers
+            for c in available_customers
         }
 
         selected_customer = st.selectbox(
@@ -760,8 +968,7 @@ def contracts_page():
         )
         customer = customer_options[selected_customer]
 
-
-        # ------- Hent cars -------
+        # ---------- LOAD CARS ----------
         cars, car_error = api_get("/cars")
         if car_error:
             st.error("❌ Failed to load cars")
@@ -773,7 +980,6 @@ def contracts_page():
             st.warning("⚠ No available cars. All cars are rented or under maintenance.")
             return
 
-        # Dropdown for biler
         car_options = {
             f"{c['brand']} {c['model']} – {c['license_plate']}": c
             for c in available_cars
@@ -785,11 +991,10 @@ def contracts_page():
         )
         car = car_options[selected_car]
 
-
-        # ------- Contract Period -------
+        # ---------- CONTRACT PERIOD ----------
         st.markdown("### 📅 Contract Period")
-
         col7, col8 = st.columns(2)
+
         with col7:
             start_date = st.date_input("Start Date *", value=datetime.now().date())
         with col8:
@@ -804,26 +1009,27 @@ def contracts_page():
                 unsafe_allow_html=True,
             )
 
-
-        # ------- Subscription -------
+        # ---------- SUB PRICE (AUTO FROM CAR) ----------
         st.markdown("### 💰 Subscription Details")
 
-        sub_price_per_month = st.number_input(
-            "Subscription price per month (DKK) *",
-            min_value=0,
-            step=100,
+        # Vis prisen fra bilen - ikke redigerbar
+        sub_price_per_month = car.get('sub_price_per_month', 0)
+
+        st.markdown(
+            f"<p style='font-size: 1.1rem; margin-bottom: 0.5rem;'>"
+            f"Subscription price per month: <strong style='color: #0ea5e9;'>{sub_price_per_month:,} DKK</strong>"
+            f"</p>",
+            unsafe_allow_html=True
         )
 
+        st.info(f"💡 This is the standard price for the {car['brand']} {car['model']}")
 
-        # ------- Submit Button -------
+        # ---------- SUBMIT BUTTON ----------
         st.markdown("<br>", unsafe_allow_html=True)
         _, col_btn, _ = st.columns([1, 1, 1])
 
         with col_btn:
-            submitted = st.button(
-                "📝 Create Contract",
-                use_container_width=True
-            )
+            submitted = st.button("📝 Create Contract", use_container_width=True)
 
         if submitted:
             if start_date >= end_date:
@@ -835,7 +1041,7 @@ def contracts_page():
                 "car_id": car["car_id"],
                 "start_date": str(start_date),
                 "end_date": str(end_date),
-                "sub_price_per_month": int(sub_price_per_month),
+                "sub_price_per_month": int(sub_price_per_month),  # Brug bilens pris
             }
 
             _, error = api_post("/contracts", payload)
@@ -845,7 +1051,7 @@ def contracts_page():
             else:
                 st.success(
                     f"✅ Contract created for {customer['name']} {customer['last_name']} "
-                    f"and {car['brand']} {car['model']}!"
+                    f"and {car['brand']} {car['model']} at {sub_price_per_month:,} DKK/month!"
                 )
                 st.balloons()
 

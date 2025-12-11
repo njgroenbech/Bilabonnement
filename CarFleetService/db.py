@@ -102,3 +102,12 @@ def update_car_status(car_id, status):
 
     return True
 
+def delete_car(car_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM cars WHERE car_id = %s", (car_id,))
+    conn.commit()
+    deleted = cursor.rowcount
+    cursor.close()
+    conn.close()
+    return deleted > 0
