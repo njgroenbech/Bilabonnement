@@ -138,6 +138,8 @@ services:
     build:
       context: ./FrontendService
       dockerfile: Dockerfile
+    volumes:
+      - ./FrontendService:/app
     ports:
       - "5007:5007"
     networks: 
