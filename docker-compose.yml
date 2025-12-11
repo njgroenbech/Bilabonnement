@@ -6,10 +6,12 @@ services:
   gateway:
     container_name: api_gateway
     build:
-      context: ./APIGateway
+      context: ./APIgateway
       dockerfile: Dockerfile
     ports:
       - "5001:5001"
+    volumes:
+      - ./APIgateway:/app
     networks:
       - microservices-network
 
@@ -20,6 +22,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5002:5002"
+    volumes:
+      - ./AuthorizationService:/app
     networks:
       - microservices-network
 
@@ -30,6 +34,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5003:5003"
+    volumes:
+      - ./CarFleetService:/app
     environment:
       MYSQL_HOST: carfleet-db
       MYSQL_USER: user_db
@@ -63,6 +69,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5004:5004"
+    volumes:
+      - ./ContractService:/app
     environment:
       MYSQL_HOST: contract-db
       MYSQL_USER: user_db
@@ -97,6 +105,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5005:5005"
+    volumes:
+      - ./CustomerInformationService:/app
     environment:
       MYSQL_HOST: customer-information-db
       MYSQL_USER: user_db
@@ -130,6 +140,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5006:5006"
+    volumes:
+      - ./DamageReportService:/app
     networks: 
       - microservices-network
 
@@ -140,6 +152,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    volumes:
+      - ./FrontendService:/app
     networks: 
       - microservices-network
 

@@ -13,4 +13,4 @@ COPY . .
 EXPOSE 3000
 
 # Run Streamlit
-CMD ["streamlit", "run", "app.py", "--server.port=5007", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "app.py", "--server.port=3000", "--server.address=0.0.0.0"]

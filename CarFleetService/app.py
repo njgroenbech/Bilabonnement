@@ -7,7 +7,7 @@ app = Flask(__name__)
 def home():
     return jsonify({
         "hello": "Hi there!",
-        "status": "running"
+        "status": "running!"
     })
 
 # endpoint for all cars
