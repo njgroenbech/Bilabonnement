@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from db import get_all_contracts, create_contract
-import requests
-import mysql.connector
+from contract_post_helpers import get_or_create_customer, get_available_car_id, update_car_status
 
 app = Flask(__name__)
 
@@ -28,85 +27,26 @@ def create_contract_route():
     try:
         data = request.get_json()
 
+        # if JSON body is empty
         if not data:
             return jsonify({
                 "success": False,
                 "error": "No JSON data received"
             }), 400
 
-        # get customer_id by email from customer information service
-        email = data.get('email')
-        customer_response = requests.get(f'http://customer-information-service:5005/customers/{email}')
+        # get customer_id or create customer, payload only needs email if customer exists
+        customer_id = get_or_create_customer(data)
 
-        # if customer_id can't be found by email, create a new customer:
-        if customer_response.status_code != 200:
-            new_customer = {
-                "name": data.get('name'),
-                "last_name": data.get('last_name'),
-                "address": data.get('address'),
-                "postal_code": data.get('postal_code'),
-                "city": data.get('city'),
-                "email": email,
-                "cpr_number": data.get('cpr_number'),
-                "registration_number": data.get('registration_number'),
-                "account_number": data.get('account_number'),
-                "comments": data.get('comments')
-            }
-
-            create_customer_response = requests.post('http://customer-information-service:5005/customers', json = new_customer)
-
-            # handle error if customer was not created
-            if create_customer_response.status_code != 201 and create_customer_response.status_code != 200:
-                return jsonify({
-                    "Success": False,
-                    "Error": "Failed to create customer. You need to provide name, last_name, address, postal_code, city, email, cpr_number, registration_number and account_number"
-                }), 500
-            
-            customer_response = requests.get(f'http://customer-information-service:5005/customers/{email}')
-
-            # check if customer retrieval was successful
-            if customer_response.status_code != 200:
-                return jsonify({
-                    "success": False,
-                    "error": "customer not found"
-                })
-        
-        # finally, grab customer_id
-        customer_id = customer_response.json()['customer_id']
-
-        # get car_id by brand, model, fuel type and availability
         brand = data.get('brand')
         model = data.get('model')
         year = data.get('year')
         fuel_type = data.get('fuel_type')
 
-        carfleet_response = requests.get(f'http://carfleet-service:5003/cars/{brand}/{model}/{year}/{fuel_type}')
+        # find car_id by parameters
+        car_id = get_available_car_id(brand, model, year, fuel_type)
 
-        # if car couldn't be found with matching parameters
-        if carfleet_response.status_code != 200:
-            return jsonify({
-                "success": False,
-                "error": f"Car with attributes '{brand}', '{model}', '{year}' and '{fuel_type}' not found"
-            }), 404
-        
-        available_cars = carfleet_response.json() # all available cars
-        if len(available_cars) == 0: # check if any cars are available with adequate parameters
-            return jsonify({
-                "success": False,
-                "error": "No available cars found"
-            }), 404
-        
-        car_id = available_cars[0]['car_id']
-
-        # update car status to 'rented'
-        update_car_status_response = requests.patch(f'http://carfleet-service:5003/cars/{car_id}/status', json={"status": "rented"})
-
-        # handle error if car status wasn't updated
-        if update_car_status_response.status_code != 200:
-            return jsonify({
-                "success": False,
-                "error": "failed to update car status"
-            }), 500
+        # update the status if car is available
+        update_car_status(car_id)
 
         start_date = data.get("start_date")
         end_date = data.get("end_date")
