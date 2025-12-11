@@ -11,7 +11,7 @@ DAMAGE_CHECK_URL = os.getenv(
 )
 
 
-st.title("AI-simuleret skadesvurdering")
+st.title("AI skadesvurdering")
 st.write(
     "Upload billeder af bilen og tryk **Få vurdering** for at få en "
     "Vurdering af bilen"
@@ -56,6 +56,4 @@ if st.button("Send til vurdering"):
                     else:
                         st.info(message or "Ukendt status.")
 
-                    if damage_level:
-                        st.write(f"**Kategori:** {damage_level['label']}")
-                        st.write(damage_level["description"])
+                  

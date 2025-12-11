@@ -9,17 +9,17 @@ DAMAGE_LEVELS = [
     {
         "key": "minor",
         "label": "MINDRE KOSMETISKE SKADER",
-        "description": "Små ridser og overfladiske skader",
+        
     },
     {
         "key": "medium",
         "label": "MELLEMSTORE SKADER",
-        "description": "Dybe ridser og større buler",
+        
     },
     {
         "key": "major",
         "label": "STORE SKADER",
-        "description": "Knuste ruder eller alvorlige mekaniske skader",
+        
     },
 ]
 @app.route("/api/damage/check", methods=["POST"])
@@ -61,7 +61,7 @@ def check_damage():
     return jsonify({
         "overall_status": "damage_found",
         "color": "red",
-        "message": f"Skade fundet: {level['label']} – {level['description']} ",
+        "message": f"Skade fundet: {level['label']}",
         "damage_level": level,
     }), 200
 
