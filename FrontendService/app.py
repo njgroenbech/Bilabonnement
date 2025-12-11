@@ -279,6 +279,44 @@ st.markdown(
         z-index: 999;
         box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
     }
+    /* Replace Streamlit file uploader default (English) instructions with Danish text. */
+    [data-testid="stFileUploaderDropzoneInstructions"] {
+        position: relative !important;
+    }
+    /* Hide the built-in instruction spans/icons so we can present our own Danish copy */
+    [data-testid="stFileUploaderDropzoneInstructions"] span,
+    [data-testid="stFileUploaderDropzoneInstructions"] svg {
+        visibility: hidden !important;
+    }
+    /* Inject Danish main instruction */
+    div[data-testid="stFileUploaderDropzoneInstructions"]::before {
+        content: "Træk og slip filer her";
+        display: block;
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 1rem;
+        margin-bottom: 0.15rem;
+    }
+    /* Inject Danish secondary instruction */
+    div[data-testid="stFileUploaderDropzoneInstructions"]::after {
+        content: "Maks 200MB per fil • PNG, JPG, JPEG";
+        display: block;
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-top: 0.15rem;
+    }
+    /* Replace the Browse button label inside the uploader */
+    [data-testid="stFileUploaderDropzone"] button[data-testid="stBaseButton-secondary"] {
+        color: transparent !important;
+        position: relative !important;
+    }
+    [data-testid="stFileUploaderDropzone"] button[data-testid="stBaseButton-secondary"]::after {
+        content: "Tilføj billeder   ";
+        color: black !important;
+        position: absolute !important;
+        left: 0; right: 0; top: 0; bottom: 0;
+        display: flex; align-items: center; justify-content: center;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -497,7 +535,7 @@ def dashboard_page():
 def ai_damage_page():
     render_page_header(
         "🧠 AI skadesvurdering",
-        "Upload billeder af bilen og få en simuleret skadesvurdering.",
+        "Upload billeder af bilen og få en automatisk skadesvurdering.",
     )
 
     uploaded_files = st.file_uploader(
@@ -510,7 +548,7 @@ def ai_damage_page():
         if not uploaded_files:
             st.warning("Upload mindst ét billede, før du beder om vurdering.")
         else:
-            with st.spinner("Sender billeder til AI-simulering..."):
+            with st.spinner("Sender billeder til AI-inspektion..."):
                 files = [
                     ("images", (f.name, f.getvalue(), f.type))
                     for f in uploaded_files
