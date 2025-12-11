@@ -139,7 +139,7 @@ services:
       context: ./FrontendService
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "5007:5007"
     networks: 
       - microservices-network
 

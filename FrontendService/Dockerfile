@@ -10,7 +10,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Streamlit default port is 8501 – we’ll override to 5007
-EXPOSE 3000
-
+EXPOSE 5007
 # Run Streamlit
 CMD ["streamlit", "run", "app.py", "--server.port=5007", "--server.address=0.0.0.0"]
