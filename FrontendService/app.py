@@ -1,5 +1,3 @@
-
-
 import os
 import streamlit as st
 import requests
@@ -11,9 +9,10 @@ DAMAGE_CHECK_URL = os.getenv(
     "DAMAGE_CHECK_URL",
     f"{GATEWAY_URL}/api/damage/check",
 )
+
 # Page configuration
 st.set_page_config(
-    page_title="Bilabonnement Dashboard",
+    page_title="Bilabonnement dashboard",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -177,7 +176,6 @@ st.markdown(
         box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.5) !important;
     }
 
-    /* TABS (Cars / Customers / Contracts undersider)                 */
     [data-testid="stTabs"] > div[role="tablist"] {
         background: #f8fafc;
         padding: 0.35rem;
@@ -201,7 +199,6 @@ st.markdown(
         box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
     }
 
-    /* EXPANDER (Filter Options på Cars-siden)                        */
     [data-testid="stExpander"] {
         border-radius: 16px !important;
         border: 1px solid #e2e8f0 !important;
@@ -215,13 +212,10 @@ st.markdown(
         color: #0f172a !important;
     }
 
-    /* Fjern den mørke kant rundt om expander indhold */
     [data-testid="stExpander"] > details > div {
         background: #ffffff !important;
     }
 
-    /* DATAFRAME (tabeller på Cars / Customers / Contracts)           */
-    /* Wrapper */
     [data-testid="stDataFrame"] {
         border-radius: 16px !important;
         border: 1px solid #e2e8f0 !important;
@@ -230,13 +224,11 @@ st.markdown(
         overflow: hidden !important;
     }
 
-    /* Selve tabellen */
     [data-testid="stDataFrame"] [role="grid"] {
         background-color: #ffffff !important;
         color: #0f172a !important;
     }
 
-    /* Rækker */
     [data-testid="stDataFrame"] [role="row"] {
         background-color: #ffffff !important;
     }
@@ -245,7 +237,6 @@ st.markdown(
         background-color: #f8fafc !important;
     }
 
-    /* Kolonne-headere */
     [data-testid="stDataFrame"] [role="columnheader"] {
         background-color: #e5f2ff !important;
         color: #0f172a !important;
@@ -253,7 +244,6 @@ st.markdown(
         border-bottom: 1px solid #dbe2f0 !important;
     }
 
-    /* Celler */
     [data-testid="stDataFrame"] [role="gridcell"] {
         border-color: #e5e7eb !important;
     }
@@ -262,7 +252,6 @@ st.markdown(
         background-color: #e0f2fe !important;
     }
 
-    /* Styling hvis pandas selv renderer en HTML-table */
     .dataframe {
         border: none !important;
         border-radius: 16px !important;
@@ -301,18 +290,18 @@ def api_get(endpoint: str):
         r = requests.get(f"{GATEWAY_URL}{endpoint}", timeout=5)
         if r.status_code == 200:
             return r.json(), None
-        return None, f"Error: {r.status_code} - {r.text}"
+        return None, f"Fejl {r.status_code}: {r.text}"
     except Exception as e:
-        return None, str(e)
+        return None, f"Teknisk fejl ved kald til API: {e}"
 
 def api_post(endpoint: str, data: dict):
     try:
         r = requests.post(f"{GATEWAY_URL}{endpoint}", json=data, timeout=5)
         if r.status_code in (200, 201):
             return r.json(), None
-        return None, f"Error: {r.status_code} - {r.text}"
+        return None, f"Fejl {r.status_code}: {r.text}"
     except Exception as e:
-        return None, str(e)
+        return None, f"Teknisk fejl ved kald til API: {e}"
 
 def display_metric_card(title: str, value, icon: str):
     st.markdown(
@@ -348,14 +337,12 @@ def render_page_header(title: str, subtitle: str):
 
 # Navigation Header
 def render_header(current_page: str):
-    # Reduce logo + spacer width so nav buttons fit on one row across viewports
     col_logo, col_home, col_spacer, col_nav1, col_nav2, col_nav3, col_nav4 = st.columns(
-    [1.2, 0.45, 1.2, 1, 1, 1, 1]
-)
+        [1.2, 0.45, 1.2, 1, 1, 1, 1]
+    )
 
     with col_logo:
         try:
-            # Use a smaller logo so the nav fits on one line without cropping
             st.image("Bilabonnement.svg", width=220)
         except Exception:
             st.markdown(
@@ -375,17 +362,15 @@ def render_header(current_page: str):
             "🏠",
             use_container_width=True,
             type="primary" if current_page == "Dashboard" else "secondary",
-            help="Dashboard",
-            key="home_btn"
+            help="Startside",
+            key="home_btn",
         ):
             st.session_state.page = "Dashboard"
             st.rerun()
 
-    # col_spacer er tom
-
     with col_nav1:
         if st.button(
-            "🚗 Fleet service",
+            "🚗 Bilflåde",
             use_container_width=True,
             type="primary" if current_page == "Cars" else "secondary",
         ):
@@ -394,7 +379,7 @@ def render_header(current_page: str):
             
     with col_nav2:
         if st.button(
-            "👥 Customer",
+            "👥 Kunder",
             use_container_width=True,
             type="primary" if current_page == "Customers" else "secondary",
         ):
@@ -403,7 +388,7 @@ def render_header(current_page: str):
             
     with col_nav3:
         if st.button(
-            "📄 Contracts",
+            "📄 Kontrakter",
             use_container_width=True,
             type="primary" if current_page == "Contracts" else "secondary",
         ):
@@ -412,16 +397,13 @@ def render_header(current_page: str):
 
     with col_nav4:
         if st.button(
-        "🧠 AI Inspection",
-        use_container_width=True,
-        type="primary" if current_page == "AI Damage" else "secondary",
-    ):
+            "🧠 Skadesvurdering",
+            use_container_width=True,
+            type="primary" if current_page == "AI Damage" else "secondary",
+        ):
             st.session_state.page = "AI Damage"
             st.rerun()
 
-    
-
-    
     st.markdown(
         "<hr style='margin: 0.5rem 0 1.5rem 0; border: none; border-top: 1px solid #e2e8f0;'>",
         unsafe_allow_html=True,
@@ -433,12 +415,12 @@ def render_footer():
         """
         <div class="footer-info">
             <div>
-                <span style="font-weight: 600; color: #1e293b;">Bilabonnement Dashboard</span>
+                <span style="font-weight: 600; color: #1e293b;">Bilabonnement dashboard</span>
                 <span style="margin-left: 1rem;">Version 1.0.0</span>
             </div>
             <div>
                 <span style="margin-right: 1.5rem;">Status: <span style="color: #10b981;">● Online</span></span>
-                <span>Gateway: <span style="color: #10b981;">Active</span></span>
+                <span>Gateway: <span style="color: #10b981;">Aktiv</span></span>
             </div>
         </div>
         """,
@@ -448,8 +430,8 @@ def render_footer():
 # Pages
 def dashboard_page():
     render_page_header(
-        "📊 Dashboard Overview",
-        "Welcome to your car subscription management system",
+        "📊 Oversigt",
+        "Velkommen til administrationssystemet for bilabonnementer.",
     )
 
     cars, car_error = api_get("/cars")
@@ -466,11 +448,11 @@ def dashboard_page():
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        display_metric_card("Total Fleet", total_cars, "🚗")
+        display_metric_card("Samlet flåde", total_cars, "🚗")
     with col2:
-        display_metric_card("Customers", total_customers, "👥")
+        display_metric_card("Kunder", total_customers, "👥")
     with col3:
-        display_metric_card("Active Contracts", total_contracts, "📄")
+        display_metric_card("Aktive kontrakter", total_contracts, "📄")
 
     if has_cars:
         st.markdown(
@@ -482,14 +464,14 @@ def dashboard_page():
                     color: #0f172a;
                     margin: 0 0 0.05rem 0;
                 ">
-                    🚗 Fleet Status Breakdown
+                    🚗 Flådestatus
                 </h2>
                 <p style="
                     color: #64748b;
                     margin: 4;
                     font-size: 1.0rem;
                 ">
-                    Current availability and status of your vehicles
+                    Aktuel tilgængelighed og status for køretøjerne.
                 </p>
             </div>
             """,
@@ -503,31 +485,32 @@ def dashboard_page():
         maintenance = sum(1 for car in cars if car.get("status") == "maintenance")
 
         with col1:
-            display_status_badge("Available", available, "#10b981")
+            display_status_badge("Tilgængelige", available, "#10b981")
         with col2:
-            display_status_badge("Rented", rented, "#f59e0b")
+            display_status_badge("Udlejede", rented, "#f59e0b")
         with col3:
-            display_status_badge("Maintenance", maintenance, "#ef4444")
+            display_status_badge("Til service", maintenance, "#ef4444")
         with col4:
             utilization = round((rented / total_cars * 100) if total_cars > 0 else 0, 1)
-            display_status_badge("Utilization", f"{utilization}%", "#0ea5e9")
+            display_status_badge("Udnyttelse", f"{utilization}%", "#0ea5e9")
+
 def ai_damage_page():
     render_page_header(
         "🧠 AI skadesvurdering",
-        "Upload billeder af bilen og få en simuleret vurdering via AI-løsningen.",
+        "Upload billeder af bilen og få en simuleret skadesvurdering.",
     )
 
     uploaded_files = st.file_uploader(
-        "Vælg et eller flere billeder",
+        "Vælg et eller flere billeder af bilen",
         type=["png", "jpg", "jpeg"],
         accept_multiple_files=True,
     )
 
     if st.button("Få vurdering"):
         if not uploaded_files:
-            st.warning("Upload mindst ét billede før du checker.")
+            st.warning("Upload mindst ét billede, før du beder om vurdering.")
         else:
-            with st.spinner("Sender til AI-eftersyn..."):
+            with st.spinner("Sender billeder til AI-simulering..."):
                 files = [
                     ("images", (f.name, f.getvalue(), f.type))
                     for f in uploaded_files
@@ -536,7 +519,7 @@ def ai_damage_page():
                 try:
                     resp = requests.post(DAMAGE_CHECK_URL, files=files)
                 except Exception as e:
-                    st.error(f"Kunne ikke kontakte API Gateway: {e}")
+                    st.error(f"Kunne ikke kontakte API-gateway: {e}")
                 else:
                     if resp.status_code != 200:
                         st.error(f"Fejl fra backend: {resp.text}")
@@ -547,7 +530,6 @@ def ai_damage_page():
                         message = data.get("message", "")
                         damage_level = data.get("damage_level")
 
-                        # Vis resultat
                         if status == "unclear":
                             st.warning(f"🟡 {message}")
                         elif status == "clear":
@@ -555,13 +537,15 @@ def ai_damage_page():
                         elif status == "damage_found":
                             st.error(f"🔴 {message}")
                         else:
-                            st.info(message or "Ukendt status.")
+                            st.info(message or "Ukendt status fra AI-vurdering.")
+
 def cars_page():
     render_page_header(
-        "🚗 Car Fleet Management", "Manage your complete vehicle inventory"
+        "🚗 Bilflådehåndtering",
+        "Administrér de biler, der indgår i abonnementsløsningen.",
     )
 
-    tab1, tab2 = st.tabs(["📋 All Vehicles", "➕ Add New Vehicle"])
+    tab1, tab2 = st.tabs(["📋 Alle køretøjer", "➕ Tilføj nyt køretøj"])
 
     with tab1:
         cars, error = api_get("/cars")
@@ -570,7 +554,7 @@ def cars_page():
         elif cars:
             df = pd.DataFrame(cars)
 
-            with st.expander("🔍 Filter Options", expanded=True):
+            with st.expander("🔍 Filterindstillinger", expanded=True):
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     status_filter = st.multiselect(
@@ -580,75 +564,75 @@ def cars_page():
                     )
                 with col2:
                     if "brand" in df.columns:
-                        brands = ["All"] + sorted(df["brand"].unique().tolist())
-                        brand_filter = st.selectbox("Brand", brands)
+                        brands = ["Alle"] + sorted(df["brand"].unique().tolist())
+                        brand_filter = st.selectbox("Mærke", brands)
                     else:
                         brand_filter = None
                 with col3:
                     if "fuel_type" in df.columns:
-                        fuel_types = ["All"] + sorted(df["fuel_type"].unique().tolist())
-                        fuel_filter = st.selectbox("Fuel Type", fuel_types)
+                        fuel_types = ["Alle"] + sorted(df["fuel_type"].unique().tolist())
+                        fuel_filter = st.selectbox("Brændstoftype", fuel_types)
                     else:
                         fuel_filter = None
 
             if status_filter and "status" in df.columns:
                 df = df[df["status"].isin(status_filter)]
-            if brand_filter and brand_filter != "All" and "brand" in df.columns:
+            if brand_filter and brand_filter != "Alle" and "brand" in df.columns:
                 df = df[df["brand"] == brand_filter]
-            if fuel_filter and fuel_filter != "All" and "fuel_type" in df.columns:
+            if fuel_filter and fuel_filter != "Alle" and "fuel_type" in df.columns:
                 df = df[df["fuel_type"] == fuel_filter]
 
             st.markdown(
-                f"<p style='color: #64748b; margin: 1rem 0;'>Showing <strong>{len(df)}</strong> vehicles</p>",
+                f"<p style='color: #64748b; margin: 1rem 0;'>Viser <strong>{len(df)}</strong> køretøjer</p>",
                 unsafe_allow_html=True,
             )
             st.dataframe(df, use_container_width=True, hide_index=True, height=500)
         else:
             st.info(
-                "ℹ️ No vehicles found in the fleet. Add your first vehicle to get started!"
+                "Ingen køretøjer registreret i flåden endnu. Tilføj det første køretøj for at komme i gang."
             )
 
     with tab2:
         with st.form("add_car_form", clear_on_submit=True):
-            st.markdown("### 🚘 Vehicle Details")
+            st.markdown("### 🚘 Køretøjsoplysninger")
 
             col1, col2, col3 = st.columns(3)
             with col1:
-                brand = st.text_input("Brand *", placeholder="Toyota, BMW, Tesla...")
+                brand = st.text_input("Mærke *", placeholder="Toyota, BMW, Tesla...")
                 model = st.text_input("Model *", placeholder="Camry, X5, Model 3...")
                 year = st.number_input(
-                    "Year *", min_value=1990, max_value=2030, value=2024
+                    "Årgang *", min_value=1990, max_value=2030, value=2024
                 )
             with col2:
-                license_plate = st.text_input("License Plate *", placeholder="AB12345")
+                license_plate = st.text_input("Nummerplade *", placeholder="AB12345")
                 km_driven = st.number_input(
-                    "Kilometers Driven *", min_value=0, value=0, step=1000
+                    "Kilometer kørt *", min_value=0, value=0, step=1000
                 )
                 fuel_type = st.selectbox(
-                    "Fuel Type *",
-                    ["Petrol", "Diesel", "Electric", "Hybrid", "Plug-in Hybrid"],
+                    "Brændstoftype *",
+                    ["Benzin", "Diesel", "Elektrisk", "Hybrid", "Plug-in Hybrid"],
                 )
             with col3:
                 status = st.selectbox(
                     "Status *", ["available", "rented", "maintenance"]
                 )
                 purchase_price = st.number_input(
-                    "Purchase Price (DKK) *", min_value=0, value=0, step=10000
+                    "Indkøbspris (DKK) *", min_value=0, value=0, step=10000
                 )
                 location = st.text_input(
-                    "Location *", placeholder="Copenhagen, Aarhus..."
+                    "Placering *", placeholder="København, Aarhus..."
                 )
 
             st.markdown("<br>", unsafe_allow_html=True)
             _, col_btn, _ = st.columns([1, 1, 1])
             with col_btn:
                 submitted = st.form_submit_button(
-                    "🚀 Add Vehicle to Fleet", use_container_width=True
+                    "🚀 Tilføj køretøj til flåden", use_container_width=True
                 )
 
             if submitted:
                 if not all([brand, model, license_plate, location]):
-                    st.error("❌ Please fill in all required fields marked with *")
+                    st.error("Udfyld venligst alle felter markeret med *.")
                 else:
                     new_car = {
                         "brand": brand,
@@ -665,15 +649,16 @@ def cars_page():
                     if error:
                         st.error(f"❌ {error}")
                     else:
-                        st.success(f"✅ Successfully added {brand} {model} to the fleet!")
+                        st.success(f"{brand} {model} er tilføjet til flåden.")
                         st.balloons()
 
 def customers_page():
     render_page_header(
-        "👥 Customer Management", "Manage your customer database"
+        "👥 Kundehåndtering",
+        "Overblik over og oprettelse af kunder i systemet.",
     )
 
-    tab1, tab2 = st.tabs(["📋 All Customers", "➕ New Customer"])
+    tab1, tab2 = st.tabs(["📋 Alle kunder", "➕ Ny kunde"])
 
     with tab1:
         customers, error = api_get("/customers")
@@ -683,8 +668,8 @@ def customers_page():
             df = pd.DataFrame(customers)
 
             search = st.text_input(
-                "🔍 Search customers",
-                placeholder="Search by name, email, or CPR number...",
+                "🔍 Søg i kunder",
+                placeholder="Søg efter navn, e-mail eller CPR-nummer...",
             )
             if search:
                 search_lower = search.lower()
@@ -698,45 +683,45 @@ def customers_page():
                 df = df[mask]
 
             st.markdown(
-                f"<p style='color: #64748b; margin: 1rem 0;'>Showing <strong>{len(df)}</strong> customers</p>",
+                f"<p style='color: #64748b; margin: 1rem 0;'>Viser <strong>{len(df)}</strong> kunder</p>",
                 unsafe_allow_html=True,
             )
             st.dataframe(df, use_container_width=True, hide_index=True, height=500)
         else:
-            st.info("ℹ️ No customers found. Add your first customer to get started!")
+            st.info("Der er endnu ingen kunder registreret. Opret den første kunde for at komme i gang.")
 
     with tab2:
         with st.form("add_customer_form", clear_on_submit=True):
-            st.markdown("### 👤 Personal Information")
+            st.markdown("### 👤 Personoplysninger")
 
             col1, col2 = st.columns(2)
             with col1:
-                name = st.text_input("First Name *", placeholder="John")
-                last_name = st.text_input("Last Name *", placeholder="Doe")
-                email = st.text_input("Email *", placeholder="john.doe@example.com")
+                name = st.text_input("Fornavn *", placeholder="Anna")
+                last_name = st.text_input("Efternavn *", placeholder="Jensen")
+                email = st.text_input("E-mail *", placeholder="anna.jensen@example.com")
                 cpr_number = st.text_input(
-                    "CPR Number *", placeholder="DDMMYY-XXXX"
+                    "CPR-nummer *", placeholder="DDMMÅÅ-XXXX"
                 )
             with col2:
                 address = st.text_input(
-                    "Address *", placeholder="Vestergade 10, 2. th"
+                    "Adresse *", placeholder="Vestergade 10, 2. th."
                 )
-                postal_code = st.text_input("Postal Code *", placeholder="1000")
-                city = st.text_input("City *", placeholder="Copenhagen")
+                postal_code = st.text_input("Postnummer *", placeholder="1000")
+                city = st.text_input("By *", placeholder="København")
 
-            st.markdown("### 💳 Banking Information")
+            st.markdown("### 💳 Bankoplysninger (valgfrit)")
             col3, col4 = st.columns(2)
             with col3:
                 registration_number = st.text_input(
-                    "Registration Number", placeholder="1234"
+                    "Registreringsnummer", placeholder="1234"
                 )
                 account_number = st.text_input(
-                    "Account Number", placeholder="1234567890"
+                    "Kontonummer", placeholder="1234567890"
                 )
             with col4:
                 comments = st.text_area(
-                    "Notes",
-                    placeholder="Additional information about the customer...",
+                    "Noter",
+                    placeholder="Evt. supplerende oplysninger om kunden...",
                     height=100,
                 )
 
@@ -744,14 +729,14 @@ def customers_page():
             _, col_btn, _ = st.columns([1, 1, 1])
             with col_btn:
                 submitted = st.form_submit_button(
-                    "✨ Create Customer Profile", use_container_width=True
+                    "✨ Opret kundeprofil", use_container_width=True
                 )
 
             if submitted:
                 if not all(
                     [name, last_name, email, cpr_number, address, postal_code, city]
                 ):
-                    st.error("❌ Please fill in all required fields marked with *")
+                    st.error("Udfyld venligst alle felter markeret med *.")
                 else:
                     new_customer = {
                         "name": name,
@@ -769,18 +754,16 @@ def customers_page():
                     if error:
                         st.error(f"❌ {error}")
                     else:
-                        st.success(
-                            f"✅ Successfully created profile for {name} {last_name}!"
-                        )
+                        st.success(f"Kundeprofil for {name} {last_name} er oprettet.")
                         st.balloons()
 
 def contracts_page():
     render_page_header(
-        "📄 Contract Management",
-        "Create and manage subscription contracts",
+        "📄 Kontrakthåndtering",
+        "Opret og få overblik over abonnements-kontrakter.",
     )
 
-    tab1, tab2 = st.tabs(["📋 All Contracts", "➕ New Contract"])
+    tab1, tab2 = st.tabs(["📋 Alle kontrakter", "➕ Ny kontrakt"])
 
     with tab1:
         contracts, error = api_get("/contracts")
@@ -789,79 +772,85 @@ def contracts_page():
         elif contracts:
             df = pd.DataFrame(contracts)
             st.markdown(
-                f"<p style='color: #64748b; margin: 1rem 0;'>Showing <strong>{len(df)}</strong> contracts</p>",
+                f"<p style='color: #64748b; margin: 1rem 0;'>Viser <strong>{len(df)}</strong> kontrakter</p>",
                 unsafe_allow_html=True,
             )
             st.dataframe(df, use_container_width=True, hide_index=True, height=500)
         else:
-            st.info("ℹ️ No contracts found. Create your first contract to get started!")
+            st.info("Der er endnu ingen kontrakter oprettet. Opret den første kontrakt for at komme i gang.")
 
     with tab2:
         with st.form("contract_form", clear_on_submit=True):
-            st.markdown("### 👤 Customer Information")
+            st.markdown("### 👤 Kundeoplysninger")
             st.markdown(
-                "<p style='color: #64748b; font-size: 0.9rem;'>Enter email of existing customer or fill in all fields for new customer</p>",
+                "<p style='color: #64748b; font-size: 0.9rem;'>Angiv e-mail på eksisterende kunde, eller udfyld alle felter for at oprette en ny kunde i forbindelse med kontrakten.</p>",
                 unsafe_allow_html=True,
             )
 
             col1, col2 = st.columns(2)
             with col1:
                 email = st.text_input(
-                    "Customer Email *", placeholder="customer@example.com"
+                    "Kundens e-mail *", placeholder="kunde@example.com"
                 )
                 name = st.text_input(
-                    "First Name (new customer)", placeholder="Leave empty if existing"
+                    "Fornavn (ny kunde)", placeholder="Tom, hvis kunden allerede findes"
                 )
-                last_name = st.text_input("Last Name (new customer)")
-                cpr_number = st.text_input("CPR Number (new customer)")
+                last_name = st.text_input("Efternavn (ny kunde)")
+                cpr_number = st.text_input("CPR-nummer (ny kunde)")
             with col2:
-                address = st.text_input("Address (new customer)")
-                postal_code = st.text_input("Postal Code (new customer)")
-                city = st.text_input("City (new customer)")
+                address = st.text_input("Adresse (ny kunde)")
+                postal_code = st.text_input("Postnummer (ny kunde)")
+                city = st.text_input("By (ny kunde)")
 
             col3, col4 = st.columns(2)
             with col3:
                 registration_number = st.text_input(
-                    "Registration Number (new customer)"
+                    "Registreringsnummer (ny kunde)"
                 )
             with col4:
                 account_number = st.text_input(
-                    "Account Number (new customer)"
+                    "Kontonummer (ny kunde)"
                 )
 
             comments = st.text_area(
-                "Notes", placeholder="Additional contract information..."
+                "Noter til kontrakten", placeholder="Evt. supplerende aftalevilkår..."
             )
 
-            st.markdown("### 🚗 Vehicle Specifications")
+            st.markdown("### 🚗 Køretøj til kontrakten")
             col5, col6 = st.columns(2)
             with col5:
                 brand = st.text_input(
-                    "Car Brand *", placeholder="Toyota, BMW, Tesla..."
+                    "Bil-mærke *", placeholder="Toyota, BMW, Tesla..."
                 )
                 model = st.text_input(
-                    "Car Model *", placeholder="Camry, X5, Model 3..."
+                    "Bil-model *", placeholder="Camry, X5, Model 3..."
                 )
             with col6:
                 year = st.number_input(
-                    "Year *", min_value=1990, max_value=2030, value=2024
+                    "Årgang *", min_value=1990, max_value=2030, value=2024
                 )
                 fuel_type = st.selectbox(
-                    "Fuel Type *",
-                    ["Petrol", "Diesel", "Electric", "Hybrid", "Plug-in Hybrid"],
+                    "Brændstoftype *",
+                    ["Benzin", "Diesel", "Elektrisk", "Hybrid", "Plug-in Hybrid"],
                 )
 
-            st.markdown("### 📅 Contract Period")
+            st.markdown("### 💰 Økonomi og periode")
             col7, col8 = st.columns(2)
             with col7:
-                start_date = st.date_input("Start Date *", value=datetime.now())
+                start_date = st.date_input("Startdato *", value=datetime.now())
+                sub_price_per_month = st.number_input(
+                    "Månedlig abonnementspris (DKK) *",
+                    min_value=0,
+                    value=0,
+                    step=100,
+                )
             with col8:
-                end_date = st.date_input("End Date *", value=datetime.now())
+                end_date = st.date_input("Slutdato *", value=datetime.now())
 
             if start_date and end_date:
                 duration = (end_date - start_date).days
                 st.markdown(
-                    f"<p style='color: #0ea5e9; font-weight: 600; margin-top: 0.5rem;'>Contract Duration: {duration} days ({duration // 30} months)</p>",
+                    f"<p style='color: #0ea5e9; font-weight: 600; margin-top: 0.5rem;'>Kontraktlængde: {duration} dage (~{duration // 30} måneder)</p>",
                     unsafe_allow_html=True,
                 )
 
@@ -869,14 +858,14 @@ def contracts_page():
             _, col_btn, _ = st.columns([1, 1, 1])
             with col_btn:
                 submitted = st.form_submit_button(
-                    "📝 Create Contract", use_container_width=True
+                    "📝 Opret kontrakt", use_container_width=True
                 )
 
             if submitted:
                 if not all([email, brand, model, fuel_type]):
-                    st.error("❌ Please fill in all required fields marked with *")
+                    st.error("Udfyld som minimum e-mail, bil-mærke, model og brændstoftype.")
                 elif start_date >= end_date:
-                    st.error("❌ End date must be after start date")
+                    st.error("Slutdato skal ligge efter startdato.")
                 else:
                     payload = {
                         "email": email,
@@ -901,11 +890,10 @@ def contracts_page():
                     if error:
                         st.error(f"❌ {error}")
                     else:
-                        st.success(
-                            f"✅ Successfully created contract for {brand} {model}!"
-                        )
+                        st.success(f"Kontrakten for {brand} {model} er oprettet.")
                         st.balloons()
 
+# Routing
 if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
 
