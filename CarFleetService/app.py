@@ -1,5 +1,13 @@
 from flask import Flask, request, jsonify
-from db import get_cars, add_car, get_car_by_id, get_cars_by_brand, get_cars_price_per_month, get_cars_by_brand_model_status, update_car_status
+from db import (
+    get_cars,
+    add_car,
+    get_car_by_id,
+    get_cars_by_brand,
+    get_cars_price_per_month,
+    get_cars_by_brand_model_status,
+    update_car_status,
+)
 
 app = Flask(__name__)
 
@@ -33,15 +41,35 @@ def insert_car():
         model = data.get('model')
         year = data.get('year')
         license_plate = data.get('license_plate')
-        km_driven = data.get('km_driven')
+        km_driven = data.get('km_driven', 0)
         fuel_type = data.get('fuel_type')
-        status = data.get('status')
+        status = data.get('status', 'available')
         purchase_price = data.get('purchase_price')
+        sub_price_per_month = data.get('sub_price_per_month')   # 🔹 NYT
         location = data.get('location')
 
-        add_car(brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, location)
+        # simpel validering – især fordi sub_price_per_month er NOT NULL i databasen
+        required_fields = [brand, model, year, license_plate, fuel_type, purchase_price, sub_price_per_month, location]
+        if any(field is None for field in required_fields):
+            return jsonify({
+                "success": False,
+                "error": "Missing required fields for creating a car"
+            }), 400
 
-        return {
+        add_car(
+            brand,
+            model,
+            year,
+            license_plate,
+            km_driven,
+            fuel_type,
+            status,
+            purchase_price,
+            sub_price_per_month,
+            location,
+        )
+
+        return jsonify({
             'brand': brand,
             'model': model,
             'year': year,
@@ -50,8 +78,9 @@ def insert_car():
             'fuel_type': fuel_type,
             'status': status,
             'purchase_price': purchase_price,
+            'sub_price_per_month': sub_price_per_month,  # 🔹 retur til frontend
             'location': location
-        }
+        }), 201
 
     except Exception as e:
         return jsonify({
@@ -78,8 +107,7 @@ def fetch_car_by_id(car_id):
             "error": str(e)
         }), 500
 
-# endpoint for car by brand
-@app.route('/cars/<string:brand>', methods=["GET"])
+@app.route('/cars/brand/<string:brand>', methods=["GET"])
 def fetch_car_by_brand(brand):
     try:
         car_by_brand = get_cars_by_brand(brand)
