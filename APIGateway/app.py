@@ -3,11 +3,17 @@ import requests
 
 app = Flask(__name__)
 
-# Helper function to forward requests to services
+# Helper: Forward requests to microservices
 def forward_request(method, url, json=None):
     try:
         response = requests.request(method, url, json=json, timeout=5)
-        return jsonify(response.json()), response.status_code
+
+        # If service returns HTML or text
+        try:
+            return jsonify(response.json()), response.status_code
+        except Exception:
+            return jsonify({"error": response.text}), response.status_code
+
     except requests.exceptions.ConnectionError:
         return jsonify({"error": f"Service unavailable: {url}"}), 503
     except requests.exceptions.Timeout:
@@ -25,9 +31,11 @@ def home():
         "routes": [
             "/cars",
             "/customers",
-            "/contracts"
+            "/contracts",
+            "/damages",
+            "/auth"
         ]
-    })
+    }), 200
 
 
 # CAR FLEET SERVICE ROUTES
@@ -47,7 +55,11 @@ def get_car_by_id(car_id):
 
 @app.route("/cars/<car_id>/status", methods=["PATCH"])
 def update_car_status(car_id):
-    return forward_request("PATCH", f"{CARFLEET_URL}/cars/{car_id}/status", request.get_json())
+    return forward_request(
+        "PATCH",
+        f"{CARFLEET_URL}/cars/{car_id}/status",
+        request.get_json()
+    )
 
 
 # CUSTOMER INFORMATION SERVICE ROUTES
@@ -58,7 +70,7 @@ def get_customers():
     return forward_request("GET", f"{CUSTOMER_URL}/customers")
 
 @app.route("/customers", methods=["POST"])
-def add_customer_gateway():
+def add_customer():
     return forward_request("POST", f"{CUSTOMER_URL}/customers", request.get_json())
 
 @app.route("/customers/id/<customer_id>", methods=["GET"])
@@ -66,8 +78,8 @@ def get_customer_by_id(customer_id):
     return forward_request("GET", f"{CUSTOMER_URL}/customers/{customer_id}")
 
 @app.route("/customers/email/<email>", methods=["GET"])
-def get_customer_id_by_email(email):
-    return forward_request("GET", f"{CUSTOMER_URL}/customers/{email}")
+def get_customer_by_email(email):
+    return forward_request("GET", f"{CUSTOMER_URL}/customers/email/{email}")
 
 
 # CONTRACT SERVICE ROUTES
@@ -78,11 +90,11 @@ def get_contracts():
     return forward_request("GET", f"{CONTRACT_URL}/contracts")
 
 @app.route("/contracts", methods=["POST"])
-def create_contract_gateway():
+def create_contract():
     return forward_request("POST", f"{CONTRACT_URL}/contracts", request.get_json())
 
 
-# DAMAGE REPORT SERVICE (placeholder)
+# DAMAGE REPORT SERVICE
 DAMAGE_URL = "http://damage-report-service:5006"
 
 @app.route("/damages", methods=["GET"])
@@ -94,14 +106,14 @@ def add_damage():
     return forward_request("POST", f"{DAMAGE_URL}/damages", request.get_json())
 
 
-# AUTH SERVICE (placeholder)
-AUTH_URL = "http://authorization-service:5001"
+# AUTH SERVICE
+AUTH_URL = "http://authorization-service:5002"
 
 @app.route("/auth/login", methods=["POST"])
 def login():
     return forward_request("POST", f"{AUTH_URL}/login", request.get_json())
 
 
-# Run gateway service
+# Run app
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)

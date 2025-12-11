@@ -74,7 +74,7 @@ services:
       - microservices-network
 
   contract-db:
-    container_name: mysql_contract_db
+    container_name: contract-db
     image: mysql:latest
     restart: always
     environment:
@@ -98,16 +98,16 @@ services:
     ports:
       - "5005:5005"
     environment:
-      MYSQL_HOST: customer-information-db
+      MYSQL_HOST: customer_information_db
       MYSQL_USER: user_db
       MYSQL_PASSWORD: password
       MYSQL_DB: customer_information_db
     depends_on:
-      - customer-information-db
+      - customer_information_db
     networks: 
       - microservices-network
 
-  customer-information-db:
+  customer_information_db:
     container_name: mysql_customer_information
     image: mysql:latest
     environment:
@@ -118,7 +118,7 @@ services:
     ports: 
       - "3309:3306"
     volumes:
-      - customer-information-db:/var/lib/mysql
+      - customer_information_db:/var/lib/mysql
       - ./CustomerInformationService/db_init:/docker-entrypoint-initdb.d
     networks:
       - microservices-network
@@ -148,7 +148,7 @@ services:
 volumes:
   carfleet-db:
   contract-db:
-  customer-information-db:
+  customer_information_db:
 
 networks:
   microservices-network:

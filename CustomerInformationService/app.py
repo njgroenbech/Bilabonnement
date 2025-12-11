@@ -1,100 +1,93 @@
 from flask import Flask, request, jsonify
-from db import get_all_customers, create_customer, get_customer_by_id, get_customer_id_by_email
+from db import (
+    get_all_customers,
+    create_customer,
+    get_customer_by_id,
+    get_customer_id_by_email
+)
 
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return jsonify({
-        "hello": "Hi there!",
-        "desc": "customer info endpoint"
-    })
-
-@app.route('/customers', methods=["GET"])
-def get_customers():
+# Returns all customers
+@app.route("/customers", methods=["GET"])
+def customers_list():
     try:
-        customer_list = get_all_customers()
-        return jsonify(customer_list), 200
-    
+        res = get_all_customers()
+        return jsonify(res), 200
     except Exception as e:
-        return jsonify({
-            "Success": False,
-            "error": str(e)
-        })
-    
-@app.route('/customers', methods=["POST"])
-def add_customer():
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# Creates a new customer
+@app.route("/customers", methods=["POST"])
+def create_customer_route():
     try:
         data = request.get_json()
 
-        name = data.get('name')
-        last_name = data.get('last_name')
-        address = data.get('address')
-        postal_code = data.get('postal_code')
-        city = data.get('city')
-        email = data.get('email')
-        cpr_number = data.get('cpr_number')
-        registration_number = data.get('registration_number')
-        account_number = data.get('account_number')
-        comments = data.get('comments')
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "Missing JSON body"
+            }), 400
 
-        create_customer(name, last_name, address, postal_code, city, email, cpr_number, registration_number, account_number, comments)
+        required = [
+            "name",
+            "last_name",
+            "address",
+            "postal_code",
+            "city",
+            "email",
+            "cpr_number",
+        ]
+        missing = [f for f in required if not data.get(f)]
+        if missing:
+            return jsonify({
+                "success": False,
+                "error": f"Missing fields: {', '.join(missing)}"
+            }), 400
 
-        return {
-            "name": name,
-            "last_name": last_name,
-            "address": address,
-            "postal_code": postal_code,
-            "city": city,
-            "email": email,
-            "cpr_number": cpr_number,
-            "registration_number": registration_number,
-            "account_number": account_number,
-            "comments": comments
-        }
-    
-    except Exception as e:
+        customer_id = create_customer(
+            data.get("name"),
+            data.get("last_name"),
+            data.get("address"),
+            data.get("postal_code"),
+            data.get("city"),
+            data.get("email"),
+            data.get("cpr_number"),
+            data.get("registration_number"),
+            data.get("account_number"),
+            data.get("comments"),
+        )
+
         return jsonify({
-            "Success": False,
-            "Error": str(e)
-        })
+            "success": True,
+            "customer_id": customer_id
+        }), 201
 
-# fetch customer by id
-@app.route('/customers/<int:customer_id>', methods=["GET"])
-def customer_by_id(customer_id):
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# Returns a customer by ID
+@app.route("/customers/<int:customer_id>", methods=["GET"])
+def get_customer_id_route(customer_id):
     try:
         res = get_customer_by_id(customer_id)
         if res is None:
-            return jsonify({
-                "Error": "Customer not found"
-            }), 404
-
+            return jsonify({"error": "Customer not found"}), 404
         return jsonify(res), 200
-
     except Exception as e:
-        return jsonify({
-            "Success": False,
-            "error": str(e)
-        })
-    
-# fetch customer id by email (for contract)
-@app.route('/customers/<string:email>', methods=["GET"])
-def id_by_email(email):
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# Returns a customer by email
+@app.route("/customers/email/<string:email>", methods=["GET"])
+def get_customer_email(email):
     try:
         res = get_customer_id_by_email(email)
         if res is None:
-            return jsonify({
-                "Error": "Customer not found"
-            }), 404
-        
+            return jsonify({"error": "Customer not found"}), 404
         return jsonify(res), 200
-
     except Exception as e:
-        return jsonify({
-            "Success": False,
-            "error": str(e)
-        })
+        return jsonify({"success": False, "error": str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5005, debug=True)
-    
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5005, debug=True)

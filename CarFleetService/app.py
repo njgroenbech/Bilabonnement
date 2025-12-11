@@ -31,7 +31,6 @@ def cars():
             "error": str(e)
         }), 500
 
-# add new car to fleet
 @app.route('/cars', methods=["POST"])
 def insert_car():
     try:
@@ -45,15 +44,26 @@ def insert_car():
         fuel_type = data.get('fuel_type')
         status = data.get('status', 'available')
         purchase_price = data.get('purchase_price')
-        sub_price_per_month = data.get('sub_price_per_month')   # 🔹 NYT
+        sub_price_per_month = data.get('sub_price_per_month')
         location = data.get('location')
 
-        # simpel validering – især fordi sub_price_per_month er NOT NULL i databasen
-        required_fields = [brand, model, year, license_plate, fuel_type, purchase_price, sub_price_per_month, location]
-        if any(field is None for field in required_fields):
+        fields = {
+            "brand": brand,
+            "model": model,
+            "year": year,
+            "license_plate": license_plate,
+            "fuel_type": fuel_type,
+            "purchase_price": purchase_price,
+            "sub_price_per_month": sub_price_per_month,
+            "location": location,
+        }
+
+        missing = [name for name, value in fields.items() if value is None]
+
+        if missing:
             return jsonify({
                 "success": False,
-                "error": "Missing required fields for creating a car"
+                "error": f"Missing required fields for creating a car: {', '.join(missing)}"
             }), 400
 
         add_car(
@@ -78,7 +88,7 @@ def insert_car():
             'fuel_type': fuel_type,
             'status': status,
             'purchase_price': purchase_price,
-            'sub_price_per_month': sub_price_per_month,  # 🔹 retur til frontend
+            'sub_price_per_month': sub_price_per_month,
             'location': location
         }), 201
 
@@ -112,7 +122,7 @@ def fetch_car_by_brand(brand):
     try:
         car_by_brand = get_cars_by_brand(brand)
 
-        if len(car_by_brand) == 0: # if it returns an empty list
+        if len(car_by_brand) == 0:
             return jsonify({
                 "error": "Brand doesn't exist"
             }), 404

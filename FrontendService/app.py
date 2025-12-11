@@ -335,7 +335,6 @@ def render_page_header(title: str, subtitle: str):
 
 # Navigation Header
 def render_header(current_page: str):
-    # Kolonne layout:
     col_logo, col_home, col_spacer, col_nav1, col_nav2, col_nav3 = st.columns([2.1, 0.5, 4.5, 1.2, 1.2, 1.2])
     
     with col_logo:
@@ -491,6 +490,7 @@ def cars_page():
 
     tab1, tab2 = st.tabs(["📋 All Vehicles", "➕ Add New Vehicle"])
 
+    # ---- TAB 1: LISTE ----
     with tab1:
         cars, error = api_get("/cars")
         if error:
@@ -536,6 +536,7 @@ def cars_page():
                 "ℹ️ No vehicles found in the fleet. Add your first vehicle to get started!"
             )
 
+    # ---- TAB 2: NY BIL ----
     with tab2:
         with st.form("add_car_form", clear_on_submit=True):
             st.markdown("### 🚘 Vehicle Details")
@@ -554,7 +555,7 @@ def cars_page():
                 )
                 fuel_type = st.selectbox(
                     "Fuel Type *",
-                    ["Petrol", "Diesel", "Electric", "Hybrid", "Plug-in Hybrid"],
+                    ["Petrol", "Diesel", "Electric", "Hybrid"],
                 )
             with col3:
                 status = st.selectbox(
@@ -562,6 +563,12 @@ def cars_page():
                 )
                 purchase_price = st.number_input(
                     "Purchase Price (DKK) *", min_value=0, value=0, step=10000
+                )
+                sub_price_per_month = st.number_input(
+                    "Subscription price per month (DKK) *",
+                    min_value=0,
+                    value=0,
+                    step=500,
                 )
                 location = st.text_input(
                     "Location *", placeholder="Copenhagen, Aarhus..."
@@ -584,9 +591,10 @@ def cars_page():
                         "year": int(year),
                         "license_plate": license_plate,
                         "km_driven": int(km_driven),
-                        "fuel_type": fuel_type,
+                        "fuel_type": fuel_type.lower(),  # matcher ENUM
                         "status": status,
                         "purchase_price": int(purchase_price),
+                        "sub_price_per_month": int(sub_price_per_month),
                         "location": location,
                     }
                     _, error = api_post("/cars", new_car)
@@ -710,6 +718,7 @@ def contracts_page():
 
     tab1, tab2 = st.tabs(["📋 All Contracts", "➕ New Contract"])
 
+    # TAB 1 — ALL CONTRACTS
     with tab1:
         contracts, error = api_get("/contracts")
         if error:
@@ -724,115 +733,121 @@ def contracts_page():
         else:
             st.info("ℹ️ No contracts found. Create your first contract to get started!")
 
+
+    # TAB 2 — NEW CONTRACT
     with tab2:
-        with st.form("contract_form", clear_on_submit=True):
-            st.markdown("### 👤 Customer Information")
+        st.markdown("### 📝 Create New Contract")
+
+        # ------- Hent customers -------
+        customers, cust_error = api_get("/customers")
+        if cust_error:
+            st.error("❌ Failed to load customers")
+            return
+
+        if not customers:
+            st.warning("⚠ No customers exist. Create a customer before making a contract.")
+            return
+
+        # Dropdown med kunder
+        customer_options = {
+            f"{c['name']} {c['last_name']} ({c['email']})": c
+            for c in customers
+        }
+
+        selected_customer = st.selectbox(
+            "👤 Select Customer *",
+            list(customer_options.keys())
+        )
+        customer = customer_options[selected_customer]
+
+
+        # ------- Hent cars -------
+        cars, car_error = api_get("/cars")
+        if car_error:
+            st.error("❌ Failed to load cars")
+            return
+
+        available_cars = [c for c in cars if c.get("status") == "available"]
+
+        if not available_cars:
+            st.warning("⚠ No available cars. All cars are rented or under maintenance.")
+            return
+
+        # Dropdown for biler
+        car_options = {
+            f"{c['brand']} {c['model']} – {c['license_plate']}": c
+            for c in available_cars
+        }
+
+        selected_car = st.selectbox(
+            "🚗 Select Available Car *",
+            list(car_options.keys())
+        )
+        car = car_options[selected_car]
+
+
+        # ------- Contract Period -------
+        st.markdown("### 📅 Contract Period")
+
+        col7, col8 = st.columns(2)
+        with col7:
+            start_date = st.date_input("Start Date *", value=datetime.now().date())
+        with col8:
+            end_date = st.date_input("End Date *", value=datetime.now().date())
+
+        if start_date and end_date:
+            duration = (end_date - start_date).days
             st.markdown(
-                "<p style='color: #64748b; font-size: 0.9rem;'>Enter email of existing customer or fill in all fields for new customer</p>",
+                f"<p style='color: #0ea5e9; font-weight: 600; margin-top: 0.5rem;'>"
+                f"Contract Duration: {duration} days ({duration // 30} months)"
+                f"</p>",
                 unsafe_allow_html=True,
             )
 
-            col1, col2 = st.columns(2)
-            with col1:
-                email = st.text_input(
-                    "Customer Email *", placeholder="customer@example.com"
-                )
-                name = st.text_input(
-                    "First Name (new customer)", placeholder="Leave empty if existing"
-                )
-                last_name = st.text_input("Last Name (new customer)")
-                cpr_number = st.text_input("CPR Number (new customer)")
-            with col2:
-                address = st.text_input("Address (new customer)")
-                postal_code = st.text_input("Postal Code (new customer)")
-                city = st.text_input("City (new customer)")
 
-            col3, col4 = st.columns(2)
-            with col3:
-                registration_number = st.text_input(
-                    "Registration Number (new customer)"
-                )
-            with col4:
-                account_number = st.text_input(
-                    "Account Number (new customer)"
-                )
+        # ------- Subscription -------
+        st.markdown("### 💰 Subscription Details")
 
-            comments = st.text_area(
-                "Notes", placeholder="Additional contract information..."
+        sub_price_per_month = st.number_input(
+            "Subscription price per month (DKK) *",
+            min_value=0,
+            step=100,
+        )
+
+
+        # ------- Submit Button -------
+        st.markdown("<br>", unsafe_allow_html=True)
+        _, col_btn, _ = st.columns([1, 1, 1])
+
+        with col_btn:
+            submitted = st.button(
+                "📝 Create Contract",
+                use_container_width=True
             )
 
-            st.markdown("### 🚗 Vehicle Specifications")
-            col5, col6 = st.columns(2)
-            with col5:
-                brand = st.text_input(
-                    "Car Brand *", placeholder="Toyota, BMW, Tesla..."
-                )
-                model = st.text_input(
-                    "Car Model *", placeholder="Camry, X5, Model 3..."
-                )
-            with col6:
-                year = st.number_input(
-                    "Year *", min_value=1990, max_value=2030, value=2024
-                )
-                fuel_type = st.selectbox(
-                    "Fuel Type *",
-                    ["Petrol", "Diesel", "Electric", "Hybrid", "Plug-in Hybrid"],
-                )
+        if submitted:
+            if start_date >= end_date:
+                st.error("❌ End date must be after start date")
+                return
 
-            st.markdown("### 📅 Contract Period")
-            col7, col8 = st.columns(2)
-            with col7:
-                start_date = st.date_input("Start Date *", value=datetime.now())
-            with col8:
-                end_date = st.date_input("End Date *", value=datetime.now())
+            payload = {
+                "customer_id": customer["customer_id"],
+                "car_id": car["car_id"],
+                "start_date": str(start_date),
+                "end_date": str(end_date),
+                "sub_price_per_month": int(sub_price_per_month),
+            }
 
-            if start_date and end_date:
-                duration = (end_date - start_date).days
-                st.markdown(
-                    f"<p style='color: #0ea5e9; font-weight: 600; margin-top: 0.5rem;'>Contract Duration: {duration} days ({duration // 30} months)</p>",
-                    unsafe_allow_html=True,
+            _, error = api_post("/contracts", payload)
+
+            if error:
+                st.error(f"❌ {error}")
+            else:
+                st.success(
+                    f"✅ Contract created for {customer['name']} {customer['last_name']} "
+                    f"and {car['brand']} {car['model']}!"
                 )
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            _, col_btn, _ = st.columns([1, 1, 1])
-            with col_btn:
-                submitted = st.form_submit_button(
-                    "📝 Create Contract", use_container_width=True
-                )
-
-            if submitted:
-                if not all([email, brand, model, fuel_type]):
-                    st.error("❌ Please fill in all required fields marked with *")
-                elif start_date >= end_date:
-                    st.error("❌ End date must be after start date")
-                else:
-                    payload = {
-                        "email": email,
-                        "name": name,
-                        "last_name": last_name,
-                        "address": address,
-                        "postal_code": postal_code,
-                        "city": city,
-                        "cpr_number": cpr_number,
-                        "registration_number": registration_number,
-                        "account_number": account_number,
-                        "comments": comments,
-                        "brand": brand,
-                        "model": model, 
-                        "year": int(year),
-                        "fuel_type": fuel_type,
-                        "start_date": str(start_date),
-                        "end_date": str(end_date),
-                        "sub_price_per_month": int(sub_price_per_month),
-                    }
-                    _, error = api_post("/contracts", payload)
-                    if error:
-                        st.error(f"❌ {error}")
-                    else:
-                        st.success(
-                            f"✅ Successfully created contract for {brand} {model}!"
-                        )
-                        st.balloons()
+                st.balloons()
 
 # Main app
 if "page" not in st.session_state:

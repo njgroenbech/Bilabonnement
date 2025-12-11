@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS customer_info (
     city VARCHAR(20) NOT NULL,
     email VARCHAR(60) UNIQUE NOT NULL,
     cpr_number VARCHAR(11) UNIQUE NOT NULL,
-    registration_number INT UNIQUE NOT NULL,
-    account_number INT UNIQUE NOT NULL,
+    registration_number VARCHAR(20) UNIQUE NOT NULL,
+    account_number VARCHAR(30) UNIQUE NOT NULL,
     comments TEXT
 );
 

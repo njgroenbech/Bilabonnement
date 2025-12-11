@@ -3,7 +3,7 @@ import os
 
 def get_connection():
     return mysql.connector.connect(
-        host=os.getenv("MYSQL_HOST", "carfleet-db"), # second arg is to pass default value
+        host=os.getenv("MYSQL_HOST", "carfleet-db"),
         user=os.getenv("MYSQL_USER", "user_db"),
         password=os.getenv("MYSQL_PASSWORD", "password"),
         database=os.getenv("MYSQL_DB", "carfleet_db")
@@ -12,12 +12,12 @@ def get_connection():
 # function to create a list of cars
 def get_cars():
     conn = get_connection()
-    cursor = conn.cursor(dictionary=True) # each row returned will be a dict
+    cursor = conn.cursor(dictionary=True)
 
     cursor.execute("SELECT * FROM cars;")
-    rows = cursor.fetchall() # fetches all rows
+    rows = cursor.fetchall()
 
-    cursor.close() # close cursor after query execution
+    cursor.close()
     conn.close()
 
     return rows
@@ -43,7 +43,7 @@ def get_car_by_id(car_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM cars WHERE car_id = %s", (car_id,)) # comma after id to create tuple (so it works with sqlconnector)
+    cursor.execute("SELECT * FROM cars WHERE car_id = %s", (car_id,))
     row = cursor.fetchone()
 
     cursor.close()
