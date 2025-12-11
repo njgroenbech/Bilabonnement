@@ -37,6 +37,7 @@ def create_contract_route():
         # get customer_id or create customer, payload only needs email if customer exists
         customer_id = get_or_create_customer(data)
 
+        # parameters provided for finding car
         brand = data.get('brand')
         model = data.get('model')
         year = data.get('year')
