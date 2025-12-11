@@ -38,9 +38,11 @@ def add_customer():
         account_number = data.get('account_number')
         comments = data.get('comments')
 
-        create_customer(name, last_name, address, postal_code, city, email, cpr_number, registration_number, account_number, comments)
+        # create_customer automatically generates id, so we make it a variable
+        customer_id = create_customer(name, last_name, address, postal_code, city, email, cpr_number, registration_number, account_number, comments)
 
         return {
+            "customer_id": customer_id,
             "name": name,
             "last_name": last_name,
             "address": address,
@@ -51,7 +53,7 @@ def add_customer():
             "registration_number": registration_number,
             "account_number": account_number,
             "comments": comments
-        }
+        }, 201
     
     except Exception as e:
         return jsonify({

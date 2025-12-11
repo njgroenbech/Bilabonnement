@@ -125,12 +125,6 @@ def cars_for_contract_service(brand, model, year, fuel_type):
     try:
         cars_list = get_cars_by_brand_model_status(brand, model, year, fuel_type)
 
-        if not cars_list:
-            return jsonify({
-                "Success": False,
-                "Message": "Could not find cars within parameters"
-            }), 404
-
         return jsonify(cars_list), 200
     
     except Exception as e:
