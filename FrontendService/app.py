@@ -1,10 +1,16 @@
+
+
+import os
 import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime
 
 GATEWAY_URL = "http://api_gateway:5001"
-
+DAMAGE_CHECK_URL = os.getenv(
+    "DAMAGE_CHECK_URL",
+    f"{GATEWAY_URL}/api/damage/check",
+)
 # Page configuration
 st.set_page_config(
     page_title="Bilabonnement Dashboard",
@@ -143,14 +149,21 @@ st.markdown(
         background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%) !important;
         color: white !important;
         border: none !important;
-        border-radius: 12px;
-        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        padding: 0.4rem 0.9rem;
         font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+        font-size: 0.95rem;
+        transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.28);
         letter-spacing: 0.02em;
-        min-height: 45px;
+        min-height: 42px;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
     
     .stButton > button:hover {
@@ -335,12 +348,15 @@ def render_page_header(title: str, subtitle: str):
 
 # Navigation Header
 def render_header(current_page: str):
-    # Kolonne layout:
-    col_logo, col_home, col_spacer, col_nav1, col_nav2, col_nav3 = st.columns([2.1, 0.5, 4.5, 1.2, 1.2, 1.2])
-    
+    # Reduce logo + spacer width so nav buttons fit on one row across viewports
+    col_logo, col_home, col_spacer, col_nav1, col_nav2, col_nav3, col_nav4 = st.columns(
+    [1.2, 0.45, 1.2, 1, 1, 1, 1]
+)
+
     with col_logo:
         try:
-            st.image("Bilabonnement.svg", width=350)
+            # Use a smaller logo so the nav fits on one line without cropping
+            st.image("Bilabonnement.svg", width=220)
         except Exception:
             st.markdown(
                 """
@@ -369,7 +385,7 @@ def render_header(current_page: str):
 
     with col_nav1:
         if st.button(
-            "🚗 Cars",
+            "🚗 Fleet service",
             use_container_width=True,
             type="primary" if current_page == "Cars" else "secondary",
         ):
@@ -378,7 +394,7 @@ def render_header(current_page: str):
             
     with col_nav2:
         if st.button(
-            "👥 Customers",
+            "👥 Customer",
             use_container_width=True,
             type="primary" if current_page == "Customers" else "secondary",
         ):
@@ -393,6 +409,18 @@ def render_header(current_page: str):
         ):
             st.session_state.page = "Contracts"
             st.rerun()
+
+    with col_nav4:
+        if st.button(
+        "🧠 AI Inspection",
+        use_container_width=True,
+        type="primary" if current_page == "AI Damage" else "secondary",
+    ):
+            st.session_state.page = "AI Damage"
+            st.rerun()
+
+    
+
     
     st.markdown(
         "<hr style='margin: 0.5rem 0 1.5rem 0; border: none; border-top: 1px solid #e2e8f0;'>",
@@ -483,7 +511,51 @@ def dashboard_page():
         with col4:
             utilization = round((rented / total_cars * 100) if total_cars > 0 else 0, 1)
             display_status_badge("Utilization", f"{utilization}%", "#0ea5e9")
+def ai_damage_page():
+    render_page_header(
+        "🧠 AI skadesvurdering",
+        "Upload billeder af bilen og få en simuleret vurdering via AI-løsningen.",
+    )
 
+    uploaded_files = st.file_uploader(
+        "Vælg et eller flere billeder",
+        type=["png", "jpg", "jpeg"],
+        accept_multiple_files=True,
+    )
+
+    if st.button("Få vurdering"):
+        if not uploaded_files:
+            st.warning("Upload mindst ét billede før du checker.")
+        else:
+            with st.spinner("Sender til AI-eftersyn..."):
+                files = [
+                    ("images", (f.name, f.getvalue(), f.type))
+                    for f in uploaded_files
+                ]
+
+                try:
+                    resp = requests.post(DAMAGE_CHECK_URL, files=files)
+                except Exception as e:
+                    st.error(f"Kunne ikke kontakte API Gateway: {e}")
+                else:
+                    if resp.status_code != 200:
+                        st.error(f"Fejl fra backend: {resp.text}")
+                    else:
+                        data = resp.json()
+                        status = data.get("overall_status")
+                        color = data.get("color")
+                        message = data.get("message", "")
+                        damage_level = data.get("damage_level")
+
+                        # Vis resultat
+                        if status == "unclear":
+                            st.warning(f"🟡 {message}")
+                        elif status == "clear":
+                            st.success(f"🟢 {message}")
+                        elif status == "damage_found":
+                            st.error(f"🔴 {message}")
+                        else:
+                            st.info(message or "Ukendt status.")
 def cars_page():
     render_page_header(
         "🚗 Car Fleet Management", "Manage your complete vehicle inventory"
@@ -834,7 +906,6 @@ def contracts_page():
                         )
                         st.balloons()
 
-# Main app
 if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
 
@@ -848,5 +919,7 @@ elif st.session_state.page == "Customers":
     customers_page()
 elif st.session_state.page == "Contracts":
     contracts_page()
+elif st.session_state.page == "AI Damage":
+    ai_damage_page()
 
 render_footer()
