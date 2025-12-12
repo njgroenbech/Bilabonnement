@@ -4,9 +4,8 @@ import time
 from api.api_client import api_get, api_post, api_delete
 from components.ui_components import render_page_header
 
-
+# Customer Management Page
 def customers_page():
-    """Customer Management Page"""
     render_page_header("👥 Customer Management", "Manage your customer database")
 
     tab1, tab2 = st.tabs(["📋 All Customers", "➕ New Customer"])

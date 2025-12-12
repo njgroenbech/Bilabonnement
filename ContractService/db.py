@@ -25,9 +25,9 @@ def create_contract(customer_id, car_id, start_date, end_date, sub_price_per_mon
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO contracts (customer_id, car_id, start_date, end_date, sub_price_per_month)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (customer_id, car_id, start_date, end_date, sub_price_per_month))
+        INSERT INTO contracts (customer_id, car_id, start_date, end_date, sub_price_per_month, status)
+        VALUES (%s, %s, %s, %s, %s, %s)
+    """, (customer_id, car_id, start_date, end_date, sub_price_per_month, 'active'))
     conn.commit()
     contract_id = cursor.lastrowid
     cursor.close()

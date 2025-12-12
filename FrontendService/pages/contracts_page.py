@@ -5,9 +5,8 @@ from datetime import datetime
 from api.api_client import api_get, api_post, api_delete
 from components.ui_components import render_page_header
 
-
+# Contract Management Page
 def contracts_page():
-    """Contract Management Page"""
     render_page_header("📄 Contract Management", "Create and manage subscription contracts")
 
     tab1, tab2 = st.tabs(["📋 All Contracts", "➕ New Contract"])

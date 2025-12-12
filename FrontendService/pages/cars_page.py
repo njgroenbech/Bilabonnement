@@ -4,9 +4,8 @@ import time
 from api.api_client import api_get, api_post, api_delete
 from components.ui_components import render_page_header
 
-
+# Car Fleet Management Page
 def cars_page():
-    """Car Fleet Management Page"""
     render_page_header("🚗 Car Fleet Management", "Manage your complete vehicle inventory")
 
     tab1, tab2 = st.tabs(["📋 All Vehicles", "➕ Add New Vehicle"])
