@@ -62,7 +62,7 @@ def add_customer():
             "Error": str(e)
         })
 
-# fetch customer by id
+# fetch customer by id.
 @app.route('/customers/<int:customer_id>', methods=["GET"])
 def customer_by_id(customer_id):
     try:
