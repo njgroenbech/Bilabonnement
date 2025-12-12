@@ -12,13 +12,13 @@ app = Flask(__name__)
 CUSTOMER_URL = "http://customer-information-service:5005"
 CARFLEET_URL = "http://carfleet-service:5003"
 
-
+# Health Check Endpoint
 @app.route("/")
 def home():
     return jsonify({"service": "contract-service", "status": "running"}), 200
 
 
-# GET ALL CONTRACTS
+# Get all contracts
 @app.route("/contracts", methods=["GET"])
 def list_contracts():
     try:
@@ -27,49 +27,60 @@ def list_contracts():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-# CREATE CONTRACT
+# Create new contract
 @app.route("/contracts", methods=["POST"])
 def create_contract_route():
     try:
         data = request.get_json()
-
-        required = ["customer_id", "car_id", "start_date", "end_date", "sub_price_per_month"]
-        missing = [f for f in required if not data.get(f)]
+        
+        # Required fields
+        required = {
+            "customer_id": data.get("customer_id"),
+            "car_id": data.get("car_id"),
+            "start_date": data.get("start_date"),
+            "end_date": data.get("end_date"),
+            "sub_price_per_month": data.get("sub_price_per_month")
+        }
+        
+        missing = [k for k, v in required.items() if v is None]
         if missing:
-            return jsonify({"success": False, "error": f"Missing fields: {', '.join(missing)}"}), 400
+            return jsonify({
+                "success": False,
+                "error": f"Missing required fields: {', '.join(missing)}"
+            }), 400
 
-        customer_id = data["customer_id"]
-        car_id = data["car_id"]
+        customer_id = required["customer_id"]
+        car_id = required["car_id"]
 
-        # VALIDATE CUSTOMER
-        r = requests.get(f"{CUSTOMER_URL}/customers/{customer_id}")
-        if r.status_code != 200:
+        # Validate customer exists
+        customer_response = requests.get(f"{CUSTOMER_URL}/customers/{customer_id}")
+        if customer_response.status_code != 200:
             return jsonify({"success": False, "error": "Customer not found"}), 404
 
-        # VALIDATE CAR
-        r = requests.get(f"{CARFLEET_URL}/cars/{car_id}")
-        if r.status_code != 200:
+        # Validate car exists and is available
+        car_response = requests.get(f"{CARFLEET_URL}/cars/{car_id}")
+        if car_response.status_code != 200:
             return jsonify({"success": False, "error": "Car not found"}), 404
 
-        car = r.json()
+        car = car_response.json()
         if car.get("status") != "available":
             return jsonify({"success": False, "error": "Car is not available"}), 400
 
-        # UPDATE CAR STATUS → RENTED
-        update_status = requests.patch(
+        # Update car status to rented
+        update_response = requests.patch(
             f"{CARFLEET_URL}/cars/{car_id}/status",
             json={"status": "rented"}
         )
-        if update_status.status_code != 200:
+        if update_response.status_code != 200:
             return jsonify({"success": False, "error": "Failed to update car status"}), 500
 
-        # CREATE CONTRACT
+        # Create contract
         contract_id = create_contract(
             customer_id,
             car_id,
-            data["start_date"],
-            data["end_date"],
-            data["sub_price_per_month"]
+            required["start_date"],
+            required["end_date"],
+            required["sub_price_per_month"]
         )
 
         return jsonify({
@@ -83,7 +94,7 @@ def create_contract_route():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-# DELETE CONTRACT
+# Delete contract and return car to available
 @app.route("/contracts/<int:contract_id>", methods=["DELETE"])
 def delete_contract_route(contract_id):
     try:
@@ -93,15 +104,18 @@ def delete_contract_route(contract_id):
 
         car_id = contract["car_id"]
 
-        # SET CAR AVAILABLE AGAIN
-        r = requests.patch(f"{CARFLEET_URL}/cars/{car_id}/status", json={"status": "available"})
-        if r.status_code != 200:
+        # Set car status back to available
+        car_response = requests.patch(
+            f"{CARFLEET_URL}/cars/{car_id}/status",
+            json={"status": "available"}
+        )
+        if car_response.status_code != 200:
             return jsonify({"success": False, "error": "Failed to update car status"}), 500
 
-        # DELETE CONTRACT
+        # Delete contract
         if delete_contract(contract_id):
             return jsonify({"success": True}), 200
-
+        
         return jsonify({"success": False, "error": "Delete failed"}), 500
 
     except Exception as e:

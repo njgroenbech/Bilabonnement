@@ -8,127 +8,129 @@ from db import (
     delete_customer,
 )
 
-CONTRACT_URL = "http://contract-service:5004" 
-
 app = Flask(__name__)
 
-# Returns all customers
+CONTRACT_URL = "http://contract-service:5004"
+
+# Health Check Endpoint
+@app.route("/")
+def home():
+    return jsonify({"service": "customer-information-service", "status": "running"}), 200
+
+
+# Get all customers
 @app.route("/customers", methods=["GET"])
 def customers_list():
     try:
-        res = get_all_customers()
-        return jsonify(res), 200
+        return jsonify(get_all_customers()), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# Creates a new customer
+
+# Create new customer
 @app.route("/customers", methods=["POST"])
 def create_customer_route():
     try:
         data = request.get_json()
-
+        
         if not data:
-            return jsonify({
-                "success": False,
-                "error": "Missing JSON body"
-            }), 400
+            return jsonify({"success": False, "error": "Missing JSON body"}), 400
 
-        required = [
-            "name",
-            "last_name",
-            "address",
-            "postal_code",
-            "city",
-            "email",
-            "cpr_number",
-        ]
-        missing = [f for f in required if not data.get(f)]
+        # Required fields
+        required = {
+            "name": data.get("name"),
+            "last_name": data.get("last_name"),
+            "address": data.get("address"),
+            "postal_code": data.get("postal_code"),
+            "city": data.get("city"),
+            "email": data.get("email"),
+            "cpr_number": data.get("cpr_number"),
+        }
+        
+        missing = [k for k, v in required.items() if v is None]
         if missing:
             return jsonify({
                 "success": False,
-                "error": f"Missing fields: {', '.join(missing)}"
+                "error": f"Missing required fields: {', '.join(missing)}"
             }), 400
 
+        # Optional fields
+        registration_number = data.get("registration_number")
+        account_number = data.get("account_number")
+        comments = data.get("comments")
+
         customer_id = create_customer(
-            data.get("name"),
-            data.get("last_name"),
-            data.get("address"),
-            data.get("postal_code"),
-            data.get("city"),
-            data.get("email"),
-            data.get("cpr_number"),
-            data.get("registration_number"),
-            data.get("account_number"),
-            data.get("comments"),
+            required["name"],
+            required["last_name"],
+            required["address"],
+            required["postal_code"],
+            required["city"],
+            required["email"],
+            required["cpr_number"],
+            registration_number,
+            account_number,
+            comments,
         )
 
-        return jsonify({
-            "success": True,
-            "customer_id": customer_id
-        }), 201
+        return jsonify({"success": True, "customer_id": customer_id}), 201
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# Returns a customer by ID
+
+# Get customer by ID
 @app.route("/customers/<int:customer_id>", methods=["GET"])
 def get_customer_id_route(customer_id):
     try:
-        res = get_customer_by_id(customer_id)
-        if res is None:
+        customer = get_customer_by_id(customer_id)
+        if not customer:
             return jsonify({"error": "Customer not found"}), 404
-        return jsonify(res), 200
+        return jsonify(customer), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# Returns a customer by email
+
+# Get customer by email
 @app.route("/customers/email/<string:email>", methods=["GET"])
 def get_customer_email(email):
     try:
-        res = get_customer_id_by_email(email)
-        if res is None:
+        customer = get_customer_id_by_email(email)
+        if not customer:
             return jsonify({"error": "Customer not found"}), 404
-        return jsonify(res), 200
+        return jsonify(customer), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+
+# Delete customer and all their contracts
 @app.route("/customers/<int:customer_id>", methods=["DELETE"])
 def delete_customer_route(customer_id):
     try:
-        # 1. Tjek om kunden har kontrakter
+        # Get all contracts for this customer
         contracts_response = requests.get(f"{CONTRACT_URL}/contracts")
         
         if contracts_response.status_code == 200:
             contracts = contracts_response.json()
-            customer_contracts = [
-                c for c in contracts 
-                if c.get('customer_id') == customer_id
-            ]
-            
-            # 2. Slet alle kundens kontrakter først
+            customer_contracts = [c for c in contracts if c.get('customer_id') == customer_id]
+
+            # Delete all customer's contracts first
             for contract in customer_contracts:
-                delete_response = requests.delete(
-                    f"{CONTRACT_URL}/contracts/{contract['contract_id']}"
-                )
+                delete_response = requests.delete(f"{CONTRACT_URL}/contracts/{contract['contract_id']}")
                 if delete_response.status_code != 200:
                     return jsonify({
-                        "success": False, 
+                        "success": False,
                         "error": f"Failed to delete contract {contract['contract_id']}"
                     }), 500
-        
-        # 3. Slet kunden
-        success = delete_customer(customer_id)
-        
-        if success:
+
+        # Delete customer
+        if delete_customer(customer_id):
             return jsonify({"success": True}), 200
-        else:
-            return jsonify({"success": False, "error": "Customer not found"}), 404
-    
+        
+        return jsonify({"success": False, "error": "Customer not found"}), 404
+
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-    
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5005, debug=True)

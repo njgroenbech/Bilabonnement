@@ -12,63 +12,31 @@ def get_connection():
 def get_all_customers():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-
     cursor.execute("SELECT * FROM customer_info")
     customers = cursor.fetchall()
-
     cursor.close()
     conn.close()
     return customers
 
-def create_customer(
-    name,
-    last_name,
-    address,
-    postal_code,
-    city,
-    email,
-    cpr_number,
-    registration_number,
-    account_number,
-    comments,
-):
+def create_customer(name, last_name, address, postal_code, city, email, cpr_number, registration_number, account_number, comments):
     conn = get_connection()
     cursor = conn.cursor()
-
-    cursor.execute(
-        """
+    cursor.execute("""
         INSERT INTO customer_info 
             (name, last_name, address, postal_code, city, email, cpr_number, registration_number, account_number, comments)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """,
-        (
-            name,
-            last_name,
-            address,
-            postal_code,
-            city,
-            email,
-            cpr_number,
-            registration_number,
-            account_number,
-            comments,
-        ),
-    )
-
+    """, (name, last_name, address, postal_code, city, email, cpr_number, registration_number, account_number, comments))
     conn.commit()
     customer_id = cursor.lastrowid
     cursor.close()
     conn.close()
-
     return customer_id
 
-def get_customer_by_id(id):
+def get_customer_by_id(customer_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-
-    cursor.execute("SELECT * FROM customer_info WHERE customer_id = %s", (id,))
+    cursor.execute("SELECT * FROM customer_info WHERE customer_id = %s", (customer_id,))
     customer = cursor.fetchone()
-
     cursor.close()
     conn.close()
     return customer
@@ -76,19 +44,14 @@ def get_customer_by_id(id):
 def get_customer_id_by_email(email):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-
-    cursor.execute(
-        """
+    cursor.execute("""
         SELECT customer_id, name, last_name, address, postal_code, city, email, cpr_number 
         FROM customer_info WHERE email = %s
-    """,
-        (email,),
-    )
-    res = cursor.fetchone()
-
+    """, (email,))
+    customer = cursor.fetchone()
     cursor.close()
     conn.close()
-    return res
+    return customer
 
 def delete_customer(customer_id):
     conn = get_connection()

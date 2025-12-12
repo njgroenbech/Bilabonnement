@@ -12,215 +12,142 @@ from db import (
 
 app = Flask(__name__)
 
+# Health Check Endpoint
 @app.route('/')
 def home():
-    return jsonify({
-        "hello": "Hi there!",
-        "status": "running"
-    })
+    return jsonify({"hello": "Hi there!", "status": "running"})
 
-# endpoint for all cars
+
+# Get All Cars in fleet
 @app.route('/cars', methods=["GET"])
 def cars():
     try:
-        cars_list = get_cars()
-        return jsonify(cars_list), 200
-    
+        return jsonify(get_cars()), 200
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
+
+# Add a new car to the fleet
 @app.route('/cars', methods=["POST"])
 def insert_car():
     try:
         data = request.get_json()
         
-        brand = data.get('brand')
-        model = data.get('model')
-        year = data.get('year')
-        license_plate = data.get('license_plate')
-        km_driven = data.get('km_driven', 0)
-        fuel_type = data.get('fuel_type')
-        status = data.get('status', 'available')
-        purchase_price = data.get('purchase_price')
-        sub_price_per_month = data.get('sub_price_per_month')
-        location = data.get('location')
-
-        fields = {
-            "brand": brand,
-            "model": model,
-            "year": year,
-            "license_plate": license_plate,
-            "fuel_type": fuel_type,
-            "purchase_price": purchase_price,
-            "sub_price_per_month": sub_price_per_month,
-            "location": location,
+        # Required fields
+        required = {
+            "brand": data.get('brand'),
+            "model": data.get('model'),
+            "year": data.get('year'),
+            "license_plate": data.get('license_plate'),
+            "fuel_type": data.get('fuel_type'),
+            "purchase_price": data.get('purchase_price'),
+            "sub_price_per_month": data.get('sub_price_per_month'),
+            "location": data.get('location'),
         }
-
-        missing = [name for name, value in fields.items() if value is None]
-
+        
+        missing = [k for k, v in required.items() if v is None]
         if missing:
             return jsonify({
                 "success": False,
-                "error": f"Missing required fields for creating a car: {', '.join(missing)}"
+                "error": f"Missing required fields: {', '.join(missing)}"
             }), 400
 
+        # Optional fields with defaults
+        km_driven = data.get('km_driven', 0)
+        status = data.get('status', 'available')
+
         add_car(
-            brand,
-            model,
-            year,
-            license_plate,
-            km_driven,
-            fuel_type,
-            status,
-            purchase_price,
-            sub_price_per_month,
-            location,
+            required['brand'], required['model'], required['year'],
+            required['license_plate'], km_driven, required['fuel_type'],
+            status, required['purchase_price'], required['sub_price_per_month'],
+            required['location']
         )
 
-        return jsonify({
-            'brand': brand,
-            'model': model,
-            'year': year,
-            'license_plate': license_plate,
-            'km_driven': km_driven,
-            'fuel_type': fuel_type,
-            'status': status,
-            'purchase_price': purchase_price,
-            'sub_price_per_month': sub_price_per_month,
-            'location': location
-        }), 201
+        return jsonify({**required, "km_driven": km_driven, "status": status}), 201
 
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
-# endpoint for car by id
+
+# Get car by ID
 @app.route('/cars/<int:car_id>', methods=["GET"])
 def fetch_car_by_id(car_id):
-    try: 
+    try:
         car = get_car_by_id(car_id)
-
-        if car is None:
-            return jsonify({
-                "error": "Car not found"
-            }), 404
-        
+        if not car:
+            return jsonify({"error": "Car not found"}), 404
         return jsonify(car), 200
-
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
+
+# Get all cars by brand
 @app.route('/cars/brand/<string:brand>', methods=["GET"])
 def fetch_car_by_brand(brand):
     try:
-        car_by_brand = get_cars_by_brand(brand)
+        cars = get_cars_by_brand(brand)
+        if not cars:
+            return jsonify({"error": "Brand doesn't exist"}), 404
+        return jsonify(cars), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
-        if len(car_by_brand) == 0:
-            return jsonify({
-                "error": "Brand doesn't exist"
-            }), 404
-        
-        return jsonify(car_by_brand), 200
 
-    except Exception as e: 
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-    
-# endpoint for cars by price
+# Get cars filtered by price range
 @app.route('/cars/price')
 def fetch_cars_price_per_month():
-    try: 
+    try:
         min_price = request.args.get('min_price', type=int)
         max_price = request.args.get('max_price', type=int)
 
         if min_price is None or max_price is None:
-            return jsonify({
-                "error": "Need min and max price"
-            }), 400
+            return jsonify({"error": "Need min and max price"}), 400
         
-        res = get_cars_price_per_month(min_price, max_price)
-
-        return jsonify(res), 200
-    
+        return jsonify(get_cars_price_per_month(min_price, max_price)), 200
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-    
-# returns available cars matching exact specifications for contract creation
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# Get available cars matching specifications for contract creation
 @app.route('/cars/<string:brand>/<string:model>/<int:year>/<string:fuel_type>', methods=["GET"])
 def cars_for_contract_service(brand, model, year, fuel_type):
     try:
         cars_list = get_cars_by_brand_model_status(brand, model, year, fuel_type)
-
         if not cars_list:
-            return jsonify({
-                "Success": False,
-                "Message": "Could not find cars within parameters"
-            }), 404
-
+            return jsonify({"success": False, "message": "No cars found"}), 404
         return jsonify(cars_list), 200
-    
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-    
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# Update car status (available, rented, maintenance)
 @app.route('/cars/<int:car_id>/status', methods=["PATCH"])
 def update_car_status_route(car_id):
     try:
         data = request.get_json()
         new_status = data.get('status')
 
-        valid_status = ["available", "rented", "maintenance"]
-        
-        if new_status not in valid_status:
+        if new_status not in ["available", "rented", "maintenance"]:
             return jsonify({
-                "Success": False,
-                "Error": f"Status not valid, must be one of: {valid_status}"
+                "success": False,
+                "error": "Invalid status. Must be: available, rented, or maintenance"
             }), 400
         
         update_car_status(car_id, new_status)
-
-        return jsonify({
-            "Success": True,
-            "car_id": car_id,
-            "status": new_status
-        }), 200
-    
+        return jsonify({"success": True, "car_id": car_id, "status": new_status}), 200
     except Exception as e:
-        return jsonify({
-            "Success": False,
-            "Error": str(e)
-        }), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
+
+# Delete a car from the fleet
 @app.route("/cars/<int:car_id>", methods=["DELETE"])
-def delete_car_route(car_id):  # Omdøb for at undgå konflikt
+def delete_car_route(car_id):
     try:
-        success = delete_car(car_id)
-        
-        if success:
+        if delete_car(car_id):
             return jsonify({"success": True}), 200
-        else:
-            return jsonify({"success": False, "error": "Car not found"}), 404
-
+        return jsonify({"success": False, "error": "Car not found"}), 404
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-    
+        return jsonify({"success": False, "error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=True)
