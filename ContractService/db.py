@@ -36,3 +36,15 @@ def create_contract(customer_id, car_id, start_date, end_date):
     conn.close()
 
     return contract_id
+
+def delete_contract(contract_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM contracts WHERE contract_id = %s", (contract_id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return True

@@ -62,4 +62,16 @@ def get_customer_id_by_email(email):
     conn.close()
     return res
 
+def delete_customer(customer_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM customer_info WHERE customer_id = %s", (customer_id,))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return True
+
 

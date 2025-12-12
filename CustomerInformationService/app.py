@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
-from db import get_all_customers, create_customer, get_customer_by_id, get_customer_id_by_email
+from db import get_all_customers, create_customer, get_customer_by_id, get_customer_id_by_email, delete_customer
+from customer_delete_helper import delete_customer_contracts
 
 app = Flask(__name__)
 
@@ -96,7 +97,26 @@ def id_by_email(email):
             "Success": False,
             "error": str(e)
         })
+    
+# delete customer and their associated contracts by communicating with ContractService
+@app.route('/customers/<int:customer_id>', methods=["DELETE"])
+def delete_customer_route(customer_id):
+    try:
+        customer = get_customer_by_id(customer_id)
 
+        if customer is None:
+            return jsonify({"Error": "Customer not found"}), 404
+        
+        # delete contracts before customer is deleted and set car to available
+        delete_customer_contracts(customer_id)
+
+        delete_customer(customer_id)
+        
+        return jsonify({"success": True}), 200
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5005, debug=True)
     

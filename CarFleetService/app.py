@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from db import get_cars, add_car, get_car_by_id, get_cars_by_brand, get_cars_price_per_month, get_cars_by_brand_model_status, update_car_status
+from db import get_cars, add_car, get_car_by_id, get_cars_by_brand, get_cars_price_per_month, get_cars_by_brand_model_status, update_car_status, delete_car 
 
 app = Flask(__name__)
 
@@ -132,7 +132,8 @@ def cars_for_contract_service(brand, model, year, fuel_type):
             "success": False,
             "error": str(e)
         }), 500
-    
+
+# endpoint to update car status
 @app.route('/cars/<int:car_id>/status', methods=["PATCH"])
 def update_car_status_route(car_id):
     try:
@@ -159,6 +160,19 @@ def update_car_status_route(car_id):
         return jsonify({
             "Success": False,
             "Error": str(e)
+        }), 500
+    
+@app.route("/cars/<int:car_id>", methods=["DELETE"])
+def delete_car_route(car_id):
+    try:
+        delete_car(car_id)
+        
+        return jsonify({"success": True}), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
         }), 500
 
 if __name__ == '__main__':

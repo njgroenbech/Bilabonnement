@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
-from db import get_all_contracts, create_contract
+from db import get_all_contracts, create_contract, delete_contract
 from contract_post_helpers import get_or_create_customer, get_available_car_id, update_car_status
 
 app = Flask(__name__)
 
+# test 
 @app.route('/')
 def home():
     return jsonify({
@@ -11,6 +12,7 @@ def home():
         "greeting": "hi there!!!"
     })
 
+# endpoint for getting all contracts
 @app.route('/contracts', methods=['GET'])
 def get_contracts():
     try:
@@ -22,6 +24,18 @@ def get_contracts():
             "Error": str(e)
         })
 
+# endpoint for deleting contract (also used when deleting customer in CustomerInformationService)
+@app.route('/contracts/<int:contract_id>', methods=['DELETE'])
+def delete_contract_route(contract_id):
+    try:
+        delete_contract(contract_id)
+
+        return jsonify({"success": True}), 200
+    
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# endpoint for creating a new contract, communicates with both CustomerInformationService and CarFleetService to get ids
 @app.route('/contracts', methods=['POST'])
 def create_contract_route():
     try:
