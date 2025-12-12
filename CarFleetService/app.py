@@ -37,9 +37,10 @@ def insert_car():
         fuel_type = data.get('fuel_type')
         status = data.get('status')
         purchase_price = data.get('purchase_price')
+        sub_price_per_month = data.get('sub_price_per_month')
         location = data.get('location')
 
-        add_car(brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, location)
+        add_car(brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, sub_price_per_month, location)
 
         return {
             'brand': brand,
@@ -50,6 +51,7 @@ def insert_car():
             'fuel_type': fuel_type,
             'status': status,
             'purchase_price': purchase_price,
+            'sub_price_per_month': sub_price_per_month,
             'location': location
         }
 

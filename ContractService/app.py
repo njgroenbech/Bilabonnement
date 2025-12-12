@@ -28,8 +28,24 @@ def get_contracts():
 @app.route('/contracts/<int:contract_id>', methods=['DELETE'])
 def delete_contract_route(contract_id):
     try:
-        delete_contract(contract_id)
+        all_contracts = get_all_contracts()
 
+        # check if there are no contracts
+        if len(all_contracts) == 0:
+            return jsonify({"success": False, "error": "No contracts exist"}), 404
+        
+        # check if contract was found 
+        contract_found = False
+        for contract in all_contracts:
+            if contract['contract_id'] == contract_id:
+                contract_found = True
+                break
+
+        if not contract_found:
+            return jsonify({"success": False, "error": "Contract not found"}), 404
+
+        # finally, delete contract
+        delete_contract(contract_id)
         return jsonify({"success": True}), 200
     
     except Exception as e:

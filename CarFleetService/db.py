@@ -22,12 +22,12 @@ def get_cars():
 
     return rows
 
-def add_car(brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, location):
+def add_car(brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, sub_price_per_month, location):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("INSERT INTO cars (brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, location) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", # 
-                   (brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, location))
+    cursor.execute("INSERT INTO cars (brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, sub_price_per_month, location) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", # 
+                   (brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, sub_price_per_month, location))
     
     car_id = cursor.lastrowid
     conn.commit() # insert is temporary, commit makes it permanent
