@@ -7,10 +7,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Perhaps expose a port here in the future
+EXPOSE 5001
 CMD [ "python", "app.py" ]
-
-
-# For testing purposes
-FROM alpine:latest
-   CMD ["tail", "-f", "/dev/null"]
