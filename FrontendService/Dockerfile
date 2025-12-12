@@ -6,11 +6,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the app
 COPY . .
 
-# Streamlit default port is 8501 – we’ll override to 5007
 EXPOSE 3000
 
-# Run Streamlit
 CMD ["streamlit", "run", "app.py", "--server.port=3000", "--server.address=0.0.0.0"]
