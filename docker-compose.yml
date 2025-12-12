@@ -3,23 +3,27 @@
 # add environments for DB connection in docker network
 
 services:
-  gateway:
+  api_gateway:
     container_name: api_gateway
     build:
       context: ./APIGateway
       dockerfile: Dockerfile
     ports:
       - "5001:5001"
+    depends_on:
+      - authorization-service
     networks:
       - microservices-network
 
   authorization-service:
     container_name: authorization_service
     build:
-      context: ./AuthorizationService 
+      context: ./AuthorizationService
       dockerfile: Dockerfile
+    # The AuthorizationService listens on port 5001 inside the container.
+    # Map host port 5002 to container port 5001 so other services can reach it at authorization-service:5001
     ports:
-      - "5002:5002"
+      - "5002:5001"
     networks:
       - microservices-network
 
@@ -142,6 +146,8 @@ services:
       - ./FrontendService:/app
     ports:
       - "5007:5007"
+    environment:
+      - GATEWAY_URL=http://api_gateway:5001
     networks: 
       - microservices-network
 

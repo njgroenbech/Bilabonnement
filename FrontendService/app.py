@@ -3,7 +3,11 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-GATEWAY_URL = "http://api_gateway:5001"
+import os
+
+# Support running frontend locally (talk to localhost) or inside Docker (talk to api_gateway)
+GATEWAY_URL = os.environ.get("GATEWAY_URL", "http://localhost:5001")
+AUTH_URL = f"{GATEWAY_URL}/auth"
 
 # Page configuration
 st.set_page_config(
@@ -285,7 +289,11 @@ st.markdown(
 # Helper functions
 def api_get(endpoint: str):
     try:
-        r = requests.get(f"{GATEWAY_URL}{endpoint}", timeout=5)
+        headers = {}
+        token = st.session_state.get("jwt")
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        r = requests.get(f"{GATEWAY_URL}{endpoint}", timeout=5, headers=headers)
         if r.status_code == 200:
             return r.json(), None
         return None, f"Error: {r.status_code} - {r.text}"
@@ -294,7 +302,11 @@ def api_get(endpoint: str):
 
 def api_post(endpoint: str, data: dict):
     try:
-        r = requests.post(f"{GATEWAY_URL}{endpoint}", json=data, timeout=5)
+        headers = {}
+        token = st.session_state.get("jwt")
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        r = requests.post(f"{GATEWAY_URL}{endpoint}", json=data, timeout=5, headers=headers)
         if r.status_code in (200, 201):
             return r.json(), None
         return None, f"Error: {r.status_code} - {r.text}"
@@ -336,8 +348,8 @@ def render_page_header(title: str, subtitle: str):
 # Navigation Header
 def render_header(current_page: str):
     # Kolonne layout:
-    col_logo, col_home, col_spacer, col_nav1, col_nav2, col_nav3 = st.columns([2.1, 0.5, 4.5, 1.2, 1.2, 1.2])
-    
+    col_logo, col_home, col_spacer, col_nav1, col_nav2, col_nav3, col_user = st.columns([2.1, 0.5, 4.0, 1.2, 1.2, 1.2, 1.6])
+
     with col_logo:
         try:
             st.image("Bilabonnement.svg", width=350)
@@ -394,6 +406,24 @@ def render_header(current_page: str):
             st.session_state.page = "Contracts"
             st.rerun()
     
+    # user role / logout
+    with col_user:
+        role = st.session_state.get("role")
+        if role:
+            st.markdown(f"<div style='text-align: right; font-size:0.95rem; color:#475569; font-weight:600'>Role: {role.capitalize()}</div>", unsafe_allow_html=True)
+            if st.button("Logout", key="logout_btn"):
+                st.session_state.pop("jwt", None)
+                st.session_state.pop("role", None)
+                st.session_state.page = "Login"
+                # Ensure the app updates immediately after logout
+                try:
+                    st.experimental_rerun()
+                except Exception:
+                    # Fallback for older/newer Streamlit versions
+                    pass
+        else:
+            st.markdown("<div style='text-align:right; color:#94a3b8;'>Not signed in</div>", unsafe_allow_html=True)
+
     st.markdown(
         "<hr style='margin: 0.5rem 0 1.5rem 0; border: none; border-top: 1px solid #e2e8f0;'>",
         unsafe_allow_html=True,
@@ -793,6 +823,11 @@ def contracts_page():
                     unsafe_allow_html=True,
                 )
 
+            # Subscription price input
+            sub_price_per_month = st.number_input(
+                "Subscription price per month (DKK)", min_value=0, value=3000, step=100
+            )
+
             st.markdown("<br>", unsafe_allow_html=True)
             _, col_btn, _ = st.columns([1, 1, 1])
             with col_btn:
@@ -836,17 +871,68 @@ def contracts_page():
 
 # Main app
 if "page" not in st.session_state:
-    st.session_state.page = "Dashboard"
+    st.session_state.page = "Login"
 
-render_header(st.session_state.page)
+def get_role_from_jwt(token: str):
+    try:
+        import jwt
+    except Exception:
+        # If PyJWT not installed, return None — require server-side enforcement
+        return None
 
-if st.session_state.page == "Dashboard":
-    dashboard_page()
-elif st.session_state.page == "Cars":
-    cars_page()
-elif st.session_state.page == "Customers":
-    customers_page()
-elif st.session_state.page == "Contracts":
-    contracts_page()
+    try:
+        data = jwt.decode(token, options={"verify_signature": False})
+        return data.get('role')
+    except Exception:
+        return None
+
+def show_login():
+    st.markdown("""
+    <div style='display:flex; align-items:center; justify-content:center; min-height:40vh; padding: 2rem;'>
+    <div style='width:100%; max-width:480px; display:block;'>
+        <div style='background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); padding: 1.75rem; border-radius: 16px; border: 1px solid #e6eef6; box-shadow: 0 8px 30px rgba(15,23,42,0.06);'>
+            <h1 style='margin: 0; font-size: 2rem;'>🚗 Bilabonnement</h1>
+            <p class='header-subtitle'>Sign in to continue</p>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+    with st.form("login_form"):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Sign in")
+
+    if submitted:
+        if not username or not password:
+            st.error("Please enter username and password")
+        else:
+            try:
+                r = requests.post(f"{AUTH_URL}/login", json={"username": username, "password": password}, timeout=5)
+                if r.status_code == 200:
+                    data = r.json()
+                    token = data.get("access_token")
+                    st.session_state.jwt = token
+                    role = get_role_from_jwt(token) if token else None
+                    st.session_state.role = role
+                    st.session_state.page = "Dashboard"
+                else:
+                    st.error(f"Login failed: {r.status_code} - {r.text}")
+            except Exception as e:
+                st.error(f"Login error: {e}")
+                
+if st.session_state.page == "Login":
+    show_login()
+else:
+    render_header(st.session_state.page)
+
+    if st.session_state.page == "Dashboard":
+        dashboard_page()
+    elif st.session_state.page == "Cars":
+        cars_page()
+    elif st.session_state.page == "Customers":
+        customers_page()
+    elif st.session_state.page == "Contracts":
+        contracts_page()
 
 render_footer()
