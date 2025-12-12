@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from db import get_cars, add_car, get_car_by_id, get_cars_by_brand, get_cars_price_per_month, get_cars_by_brand_model_status, update_car_status
+from db import get_cars, add_car, get_car_by_id, get_cars_by_brand, get_cars_price_per_month, get_cars_by_brand_model_status, update_car_status, delete_car 
 
 app = Flask(__name__)
 
@@ -37,9 +37,10 @@ def insert_car():
         fuel_type = data.get('fuel_type')
         status = data.get('status')
         purchase_price = data.get('purchase_price')
+        sub_price_per_month = data.get('sub_price_per_month')
         location = data.get('location')
 
-        add_car(brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, location)
+        add_car(brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, sub_price_per_month, location)
 
         return {
             'brand': brand,
@@ -50,6 +51,7 @@ def insert_car():
             'fuel_type': fuel_type,
             'status': status,
             'purchase_price': purchase_price,
+            'sub_price_per_month': sub_price_per_month,
             'location': location
         }
 
@@ -132,7 +134,8 @@ def cars_for_contract_service(brand, model, year, fuel_type):
             "success": False,
             "error": str(e)
         }), 500
-    
+
+# endpoint to update car status
 @app.route('/cars/<int:car_id>/status', methods=["PATCH"])
 def update_car_status_route(car_id):
     try:
@@ -159,6 +162,19 @@ def update_car_status_route(car_id):
         return jsonify({
             "Success": False,
             "Error": str(e)
+        }), 500
+    
+@app.route("/cars/<int:car_id>", methods=["DELETE"])
+def delete_car_route(car_id):
+    try:
+        delete_car(car_id)
+        
+        return jsonify({"success": True}), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
         }), 500
 
 if __name__ == '__main__':

@@ -22,12 +22,12 @@ def get_cars():
 
     return rows
 
-def add_car(brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, location):
+def add_car(brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, sub_price_per_month, location):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("INSERT INTO cars (brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, location) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", # 
-                   (brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, location))
+    cursor.execute("INSERT INTO cars (brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, sub_price_per_month, location) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", # 
+                   (brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, sub_price_per_month, location))
     
     car_id = cursor.lastrowid
     conn.commit() # insert is temporary, commit makes it permanent
@@ -99,3 +99,14 @@ def update_car_status(car_id, status):
 
     return True
 
+def delete_car(car_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM cars WHERE car_id = %s", (car_id,))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return True

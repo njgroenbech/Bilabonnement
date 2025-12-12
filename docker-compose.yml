@@ -1,4 +1,3 @@
-# Volumes need to be added
 # dependencies also need to be added, which will wait for services to be ready before initializing
 # add environments for DB connection in docker network
 

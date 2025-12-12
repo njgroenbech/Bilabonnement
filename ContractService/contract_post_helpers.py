@@ -1,7 +1,11 @@
 import requests
 
 def get_or_create_customer(json_payload):
-    # check if email is provided
+    # If customer_id is already provided, just return it
+    if 'customer_id' in json_payload:
+        return json_payload['customer_id']
+    
+    # Otherwise, check if email is provided
     if 'email' not in json_payload:
         raise Exception("No email provided")
     
@@ -34,21 +38,27 @@ def get_or_create_customer(json_payload):
     
     return create_new_customer.json()["customer_id"]
 
-
-def get_available_car_id(brand, model, year, fuel_type):
+def get_available_car_id(brand=None, model=None, year=None, fuel_type=None, car_id=None):
+    # If car_id is already provided, just return it
+    if car_id:
+        return car_id
+    
+    # Otherwise, find car by parameters
+    if not all([brand, model, year, fuel_type]):
+        raise Exception("Either car_id or all car parameters (brand, model, year, fuel_type) must be provided")
+    
     # get car by parameters
-    car_response = requests.get(f"http://carfleet-service:5003/cars/{brand}/{model}/{year}/{fuel_type}", timeout = 3)
-
+    car_response = requests.get(f"http://carfleet-service:5003/cars/{brand}/{model}/{year}/{fuel_type}", timeout=3)
+    
     if car_response.status_code != 200:
-        raise Exception ("Could not retrieve car_id based on parameters provided")
+        raise Exception("Could not retrieve car_id based on parameters provided")
     
     available_cars = car_response.json()
-
+    
     if len(available_cars) == 0:
         raise Exception("No cars available with parameters provided. Could be rented, in maintenance or the car doesn't exist.")
     
     return available_cars[0]["car_id"]
-
 
 def update_car_status(car_id):
     car_status_response = requests.patch(f'http://carfleet-service:5003/cars/{car_id}/status', json={"status": "rented"}, timeout = 3)

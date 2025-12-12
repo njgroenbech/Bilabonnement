@@ -4,11 +4,12 @@ CREATE TABLE IF NOT EXISTS contracts (
     car_id INT NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
+    sub_price_per_month INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Testdata
-INSERT INTO contracts (customer_id, car_id, start_date, end_date)
+INSERT INTO contracts (customer_id, car_id, start_date, end_date, sub_price_per_month)
 VALUES
-(1, 2, '2023-11-01', '2023-12-01'),
-(3, 4, '2023-10-10', '2023-10-20');
+(1, 2, '2023-11-01', '2023-12-01', 1999),
+(3, 4, '2023-10-10', '2023-10-20', 1499);
