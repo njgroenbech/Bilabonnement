@@ -42,7 +42,7 @@ def add_customer():
         # create_customer automatically generates id, so we make it a variable
         customer_id = create_customer(name, last_name, address, postal_code, city, email, cpr_number, registration_number, account_number, comments)
 
-        return {
+        return jsonify({
             "customer_id": customer_id,
             "name": name,
             "last_name": last_name,
@@ -54,13 +54,13 @@ def add_customer():
             "registration_number": registration_number,
             "account_number": account_number,
             "comments": comments
-        }, 201
+        }), 201
     
     except Exception as e:
         return jsonify({
             "Success": False,
             "Error": str(e)
-        })
+        }), 500
 
 # fetch customer by id.
 @app.route('/customers/<int:customer_id>', methods=["GET"])

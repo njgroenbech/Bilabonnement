@@ -56,35 +56,39 @@ def delete_contract_route(contract_id):
 def create_contract_route():
     try:
         data = request.get_json()
-
+        
         # if JSON body is empty
         if not data:
             return jsonify({
-                "success": False,
-                "error": "No JSON data received"
+                "Success": False,
+                "Error": "No JSON data received"
             }), 400
-
-        # get customer_id or create customer, payload only needs email if customer exists
+        
+        # get customer_id (from payload or create customer)
         customer_id = get_or_create_customer(data)
-
-        # parameters provided for finding car
-        brand = data.get('brand')
-        model = data.get('model')
-        year = data.get('year')
-        fuel_type = data.get('fuel_type')
-
-        # find car_id by parameters
-        car_id = get_available_car_id(brand, model, year, fuel_type)
-
-        # update the status if car is available
+        
+        # get car_id (from payload or find by parameters)
+        car_id = data.get('car_id')
+        if not car_id:
+            brand = data.get('brand')
+            model = data.get('model')
+            year = data.get('year')
+            fuel_type = data.get('fuel_type')
+            car_id = get_available_car_id(brand, model, year, fuel_type)
+        else:
+            car_id = get_available_car_id(car_id=car_id)
+        
+        # update car status to rented
         update_car_status(car_id)
-
+        
+        # get contract details
         start_date = data.get("start_date")
         end_date = data.get("end_date")
-
-        # finally, create the contract
-        create_contract(customer_id, car_id, start_date, end_date)
-
+        sub_price_per_month = data.get("sub_price_per_month")
+        
+        # create the contract
+        create_contract(customer_id, car_id, start_date, end_date, sub_price_per_month)
+        
         return jsonify({
             "Success": True,
             "customer_id": customer_id,

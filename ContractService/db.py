@@ -21,20 +21,18 @@ def get_all_contracts():
 
     return rows
 
-def create_contract(customer_id, car_id, start_date, end_date):
+def create_contract(customer_id, car_id, start_date, end_date, sub_price_per_month):
     conn = get_connection()
     cursor = conn.cursor()
-
     cursor.execute("""
-        INSERT INTO contracts (customer_id, car_id, start_date, end_date)
-        VALUES (%s, %s, %s, %s)
-    """, (customer_id, car_id, start_date, end_date))
-
+        INSERT INTO contracts (customer_id, car_id, start_date, end_date, sub_price_per_month)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (customer_id, car_id, start_date, end_date, sub_price_per_month))
     conn.commit()
     contract_id = cursor.lastrowid
     cursor.close()
     conn.close()
-
+    
     return contract_id
 
 def delete_contract(contract_id):
