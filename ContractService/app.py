@@ -30,24 +30,29 @@ def delete_contract_route(contract_id):
     try:
         all_contracts = get_all_contracts()
 
-        # check if there are no contracts
         if len(all_contracts) == 0:
             return jsonify({"success": False, "error": "No contracts exist"}), 404
-        
-        # check if contract was found 
-        contract_found = False
+
+        contract_to_delete = None
         for contract in all_contracts:
             if contract['contract_id'] == contract_id:
-                contract_found = True
+                contract_to_delete = contract
                 break
 
-        if not contract_found:
+        if not contract_to_delete:
             return jsonify({"success": False, "error": "Contract not found"}), 404
 
-        # finally, delete contract
+        # hent car_id FØR sletning
+        car_id = contract_to_delete['car_id']
+
+        # slet kontrakten
         delete_contract(contract_id)
+
+        # frigiv bilen igen
+        update_car_status(car_id, status="available")
+
         return jsonify({"success": True}), 200
-    
+
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 

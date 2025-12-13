@@ -60,11 +60,15 @@ def get_available_car_id(brand=None, model=None, year=None, fuel_type=None, car_
     
     return available_cars[0]["car_id"]
 
-def update_car_status(car_id):
-    car_status_response = requests.patch(f'http://carfleet-service:5003/cars/{car_id}/status', json={"status": "rented"}, timeout = 3)
+def update_car_status(car_id, status="rented"):
+    car_status_response = requests.patch(
+        f'http://carfleet-service:5003/cars/{car_id}/status',
+        json={"status": status},
+        timeout=3
+    )
 
     if car_status_response.status_code != 200:
         raise Exception(f"Failed to update car status with car_id: {car_id}")
-    
+
     return car_status_response
 
