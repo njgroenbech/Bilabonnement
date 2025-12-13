@@ -46,8 +46,8 @@ def render_page_header(title: str, subtitle: str):
 
 def render_header(current_page: str):
     """Render main navigation header"""
-    col_logo, col_home, col_spacer, col_nav1, col_nav2, col_nav3 = st.columns(
-        [2.1, 0.5, 4.5, 1.2, 1.2, 1.2]
+    col_logo, col_home, col_spacer, col_nav1, col_nav2, col_nav3, col_nav4 = st.columns(
+        [2.1, 0.5, 3.3, 1.2, 1.2, 1.2, 1.4]
     )
     
     with col_logo:
@@ -102,6 +102,15 @@ def render_header(current_page: str):
             type="primary" if current_page == "Contracts" else "secondary",
         ):
             st.session_state.page = "Contracts"
+            st.rerun()
+    
+    with col_nav4:
+        if st.button(
+            "🧠 AI Damage",
+            use_container_width=True,
+            type="primary" if current_page == "AI Damage" else "secondary",
+        ):
+            st.session_state.page = "AI Damage"
             st.rerun()
     
     st.markdown(

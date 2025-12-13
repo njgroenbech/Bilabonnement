@@ -18,7 +18,7 @@ from pages.cars_page import cars_page
 from pages.customer_page import customers_page
 from pages.contracts_page import contracts_page
 from pages.dashboard_page import dashboard_page
-
+from pages.ai_damage_page import ai_damage_page
 
 # Load Global CSS
 load_global_css()
@@ -41,5 +41,7 @@ elif st.session_state.page == "Customers":
 
 elif st.session_state.page == "Contracts":
     contracts_page()
-
+    
+elif st.session_state.page == "AI Damage":
+    ai_damage_page()
 render_footer()

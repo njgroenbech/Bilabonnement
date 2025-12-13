@@ -9,6 +9,7 @@ app = Flask(__name__)
 CARFLEET_URL = "http://carfleet-service:5003"
 CUSTOMER_URL = "http://customer-information-service:5005"
 CONTRACT_URL = "http://contract-service:5004"
+DAMAGE_SERVICE_URL = "http://damage-report-service:5006"
 
 # Health Check Endpoint
 @app.route("/")
@@ -16,7 +17,7 @@ def home():
     return jsonify({
         "service": "API Gateway",
         "status": "running",
-        "routes": ["/cars", "/customers", "/contracts"] # add auth and damagereport
+        "routes": ["/cars", "/customers", "/contracts", "/damagecheck"] # add auth and damagereport
     }), 200
 
 # CAR FLEET SERVICE ROUTES
@@ -164,6 +165,23 @@ def delete_contract_gateway(contract_id):
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+# DAMAGE REPORT ROUTE
+@app.route("/damagecheck", methods=["POST"])
+def damage_check():
+
+    files = []
+    for file_storage in request.files.getlist("images"):
+        files.append((
+            "images",
+            (file_storage.filename, file_storage.stream, file_storage.mimetype)
+        ))
+
+    try:
+        resp = requests.post(f"{DAMAGE_SERVICE_URL}/damagecheck", files=files)
+        return jsonify(resp.json()), resp.status_code
+    except Exception as e:
+        return jsonify({"error": f"Failed to reach damage-report-service: {e}"}), 502
+    
 
 
 if __name__ == "__main__":
