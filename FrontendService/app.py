@@ -415,14 +415,11 @@ def render_header(current_page: str):
                 st.session_state.pop("jwt", None)
                 st.session_state.pop("role", None)
                 st.session_state.page = "Login"
-                # Ensure the app updates immediately after logout
                 try:
                     st.experimental_rerun()
                 except Exception:
-                    # Fallback for older/newer Streamlit versions
                     pass
-        else:
-            st.markdown("<div style='text-align:right; color:#94a3b8;'>Not signed in</div>", unsafe_allow_html=True)
+    
 
     st.markdown(
         "<hr style='margin: 0.5rem 0 1.5rem 0; border: none; border-top: 1px solid #e2e8f0;'>",
@@ -874,14 +871,26 @@ if "page" not in st.session_state:
     st.session_state.page = "Login"
 
 def get_role_from_jwt(token: str):
-    try:
-        import jwt
-    except Exception:
-        # If PyJWT not installed, return None — require server-side enforcement
+    if not token:
         return None
-
+    # Try PyJWT first
     try:
-        data = jwt.decode(token, options={"verify_signature": False})
+        import jwt as _jwt
+        data = _jwt.decode(token, options={"verify_signature": False})
+        return data.get('role')
+    except Exception:
+        pass
+
+    # Fallback: decode payload using base64 (no verification)
+    try:
+        import base64, json
+        parts = token.split('.')
+        if len(parts) < 2:
+            return None
+        b = parts[1]
+        b += '=' * (-len(b) % 4)
+        decoded = base64.urlsafe_b64decode(b)
+        data = json.loads(decoded.decode('utf-8'))
         return data.get('role')
     except Exception:
         return None
@@ -911,13 +920,18 @@ def show_login():
                 r = requests.post(f"{AUTH_URL}/login", json={"username": username, "password": password}, timeout=5)
                 if r.status_code == 200:
                     data = r.json()
-                    token = data.get("access_token")
-                    st.session_state.jwt = token
-                    role = get_role_from_jwt(token) if token else None
-                    st.session_state.role = role
-                    st.session_state.page = "Dashboard"
-                else:
-                    st.error(f"Login failed: {r.status_code} - {r.text}")
+                    token = data.get("JWT_token") or data.get("JWT token") or data.get("access_token") or data.get("token")
+                    if not token:
+                        st.error("Login succeeded but no token was returned by the auth service")
+                    else:
+                        st.session_state.jwt = token
+                        role = get_role_from_jwt(token)
+                        st.session_state.role = role
+                        st.session_state.page = "Dashboard"
+                        try:
+                            st.experimental_rerun()
+                        except Exception:
+                            pass
             except Exception as e:
                 st.error(f"Login error: {e}")
                 
