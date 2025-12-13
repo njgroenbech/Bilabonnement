@@ -11,21 +11,30 @@ services:
       - "5001:5001"
     volumes:
       - ./APIgateway:/app
+    env_file:
+        - .env
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
     networks:
       - microservices-network
 
   authorization-service:
     container_name: authorization_service
     build:
-      context: ./AuthorizationService 
+      context: ./AuthorizationService
       dockerfile: Dockerfile
     ports:
       - "5002:5002"
     volumes:
       - ./AuthorizationService:/app
+    env_file:
+        - .env
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
     networks:
       - microservices-network
 
+      
   carfleet-service:
     container_name: carfleet_service
     build:
