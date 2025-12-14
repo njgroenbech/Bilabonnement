@@ -223,7 +223,7 @@ def delete_contract_gateway(contract_id):
         return jsonify({"error": str(e)}), 500
 # DAMAGE REPORT ROUTE
 @app.route("/damagecheck", methods=["POST"])
-@jwt_required()
+
 def damage_check():
 
     files = []
