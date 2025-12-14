@@ -55,8 +55,8 @@ def render_page_header(title: str, subtitle: str):
 def render_header(current_page: str):
     has_jwt = bool(st.session_state.get("jwt"))
 
-    col_logo, col_home, col_spacer, col_nav1, col_nav2, col_nav3, col_nav4 = st.columns(
-        [2.1, 0.5, 3.3, 1.2, 1.2, 1.2, 1.4]
+    col_logo, col_home, col_spacer, col_nav1, col_nav2, col_nav3, col_nav4, col_logout = st.columns(
+        [2.1, 0.5, 3.0, 1.2, 1.2, 1.2, 1.2, 0.5]
     )
 
     with col_logo:
@@ -131,6 +131,18 @@ def render_header(current_page: str):
             st.session_state.page = "AI Damage"
             st.rerun()
 
+    with col_logout:
+        if st.button(
+            "🚪",
+            use_container_width=True,
+            type="primary",
+            help="Logout",
+            key="logout_btn_header",
+        ):
+            st.session_state.clear()
+            st.session_state.page = "Login"
+            st.rerun()
+
     st.markdown(
         _html("<hr style='margin:0.5rem 0 1.5rem 0; border:none; border-top:1px solid #e2e8f0;'>"),
         unsafe_allow_html=True,
@@ -176,11 +188,3 @@ def render_footer():
     """)
 
     st.markdown(footer_html, unsafe_allow_html=True)
-
-    if has_jwt:
-        col_spacer, col_btn = st.columns([8, 2])
-        with col_btn:
-            if st.button("Logout", key="logout_btn", use_container_width=True):
-                st.session_state.clear()
-                st.session_state.page = "Login"
-                st.rerun()
