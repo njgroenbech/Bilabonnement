@@ -30,7 +30,12 @@ services:
     env_file:
         - .env
     environment:
-      - JWT_SECRET=${JWT_SECRET}
+      MYSQL_HOST: authorization-db
+      MYSQL_USER: user_db
+      MYSQL_PASSWORD: password
+      MYSQL_DB: authorization_db
+    depends_on:
+      - authorization-db
     networks:
       - microservices-network
 
@@ -141,6 +146,22 @@ services:
     networks:
       - microservices-network
 
+  authorization-db:
+    container_name: mysql_authorization_db
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: authrootpw
+      MYSQL_DATABASE: authorization_db
+      MYSQL_USER: user_db
+      MYSQL_PASSWORD: password
+    ports:
+      - "3310:3306"
+    volumes:
+      - authorization-db:/var/lib/mysql
+      - ./AuthorizationService/db_init:/docker-entrypoint-initdb.d
+    networks:
+      - microservices-network
+
   damage-report-service:
     container_name: damage_report_service
     build:
@@ -169,6 +190,7 @@ volumes:
   carfleet-db:
   contract-db:
   customer-information-db:
+  authorization-db:
 
 networks:
   microservices-network:
