@@ -12,5 +12,5 @@ CREATE TABLE IF NOT EXISTS contracts (
 -- Testdata
 INSERT INTO contracts (customer_id, car_id, start_date, end_date, sub_price_per_month, status)
 VALUES
-(1, 2, '2023-11-01', '2023-12-01', 1999, 'active'),
-(3, 4, '2023-10-10', '2023-10-20', 1499, 'active');
+(1, 2, '2023-11-01', '2023-12-01', 5200, 'active'),
+(3, 4, '2023-10-10', '2023-10-20', 14500, 'active');

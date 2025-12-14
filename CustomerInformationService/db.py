@@ -73,5 +73,3 @@ def delete_customer(customer_id):
     conn.close()
 
     return True
-
-
