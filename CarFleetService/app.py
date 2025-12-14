@@ -36,11 +36,12 @@ def insert_car():
         km_driven = data.get('km_driven')
         fuel_type = data.get('fuel_type')
         status = data.get('status')
-        purchase_price = data.get('purchase_price')
-        sub_price_per_month = data.get('sub_price_per_month')
         location = data.get('location')
+        purchase_price = data.get('purchase_price')
+        sub_type = data.get('sub_type')
+        sub_price_per_month = data.get('sub_price_per_month')
 
-        add_car(brand, model, year, license_plate, km_driven, fuel_type, status, purchase_price, sub_price_per_month, location)
+        add_car(brand, model, year, license_plate, km_driven, fuel_type, status, location, purchase_price, sub_type, sub_price_per_month)
 
         return {
             'brand': brand,
@@ -50,9 +51,10 @@ def insert_car():
             'km_driven': km_driven,
             'fuel_type': fuel_type,
             'status': status,
+            'location': location,
             'purchase_price': purchase_price,
+            'sub_type': sub_type,
             'sub_price_per_month': sub_price_per_month,
-            'location': location
         }
 
     except Exception as e:

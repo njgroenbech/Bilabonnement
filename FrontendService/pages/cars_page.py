@@ -109,6 +109,7 @@ def cars_page():
             with col3:
                 status = st.selectbox("Status *", ["available", "rented", "maintenance"])
                 purchase_price = st.number_input("Purchase Price (DKK) *", min_value=0, value=0, step=10000)
+                sub_type = st.selectbox("Subscription Type *", ["subscription", "mini-lease"])
                 sub_price_per_month = st.number_input(
                     "Subscription price per month (DKK) *",
                     min_value=0,
@@ -137,6 +138,7 @@ def cars_page():
                         "fuel_type": fuel_type.lower(),
                         "status": status,
                         "purchase_price": int(purchase_price),
+                        "sub_type": sub_type,
                         "sub_price_per_month": int(sub_price_per_month),
                         "location": location,
                     }
