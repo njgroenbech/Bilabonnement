@@ -31,7 +31,6 @@
     -d '{"username":"admin","password":"password"}' | jq
   ```
 
-
 ## Output
-- Succes-return: JSON med `JWT_token` (bruges i frontend), `token_type` og `role`.
+JSON med `JWT_token` (bruges i frontend), `token_type` og `role`.
 
