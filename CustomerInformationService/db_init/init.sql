@@ -1,3 +1,5 @@
+SET NAMES utf8mb4;
+
 -- create customer information table
 -- Todo: change cpr_number, registration_number and account_number to VARBINARY and possible encryption? using cryptography library
 CREATE TABLE IF NOT EXISTS customer_info (
@@ -12,7 +14,8 @@ CREATE TABLE IF NOT EXISTS customer_info (
     registration_number INT UNIQUE NOT NULL,
     account_number INT UNIQUE NOT NULL,
     comments TEXT
-);
+) CHARACTER SET utf8mb4
+COLLATE utf8mb4_0900_ai_ci;
 
 -- insert data
 INSERT INTO customer_info (name, last_name, address, postal_code, city, email, cpr_number, registration_number, account_number, comments) VALUES

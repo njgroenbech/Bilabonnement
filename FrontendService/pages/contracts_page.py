@@ -5,7 +5,7 @@ from datetime import datetime
 from api.api_client import api_get, api_post, api_delete
 from components.ui_components import render_page_header
 
-# Contract Management Page
+# Page: Contracts Management
 def contracts_page():
     render_page_header("📄 Contract Management", "Create and manage subscription contracts")
 
@@ -14,18 +14,45 @@ def contracts_page():
     # TAB 1: All Contracts
     with tab1:
         contracts, error = api_get("/contracts")
+        customers, _ = api_get("/customers")
+        cars, _ = api_get("/cars")
 
         if error:
             st.error(f"❌ {error}")
+
         elif contracts:
             df = pd.DataFrame(contracts)
+
+            customer_map = {
+                c["customer_id"]: f"{c['name']} {c['last_name']}"
+                for c in customers
+            } if customers else {}
+
+            car_map = {
+                c["car_id"]: f"{c['brand']} {c['model']} ({c['license_plate']})"
+                for c in cars
+            } if cars else {}
+
+            df["customer_name"] = df["customer_id"].map(customer_map)
+            df["car_name"] = df["car_id"].map(car_map)
+
+            preferred_order = [
+                "contract_id",
+                "customer_name",
+                "car_name",
+                "start_date",
+                "end_date",
+                "status",
+                "sub_price_per_month",
+            ]
+
+            df = df[[col for col in preferred_order if col in df.columns]]
 
             st.markdown(
                 f"<p style='color: #64748b; margin: 1rem 0;'>Showing <strong>{len(df)}</strong> contracts</p>",
                 unsafe_allow_html=True,
             )
 
-            # Display table
             st.data_editor(
                 df,
                 use_container_width=True,
@@ -33,34 +60,35 @@ def contracts_page():
                 height=400,
                 disabled=df.columns.tolist(),
                 num_rows="fixed",
-                key="contract_table"
+                key="contract_table",
             )
 
-            # Delete section
             st.markdown("---")
             col1, col2, col3 = st.columns([2, 1, 2])
-            
+
             with col2:
                 contract_options = {
-                    f"Contract #{c['contract_id']} - Customer #{c.get('customer_id', 'N/A')}": c['contract_id']
+                    f"{customer_map.get(c['customer_id'], 'Unknown')} – "
+                    f"{car_map.get(c['car_id'], 'Unknown')}":
+                    c["contract_id"]
                     for c in contracts
                 }
-                
+
                 selected_to_delete = st.selectbox(
                     "Select contract to delete:",
                     options=[""] + list(contract_options.keys()),
                     format_func=lambda x: "Select a contract..." if x == "" else x,
-                    key="contract_delete_select"
+                    key="contract_delete_select",
                 )
-                
-                if selected_to_delete and selected_to_delete != "":
+
+                if selected_to_delete:
                     contract_id = contract_options[selected_to_delete]
-                    
+
                     if st.button(
                         "🗑️ Delete Selected Contract",
                         type="primary",
                         use_container_width=True,
-                        key="contract_delete_btn"
+                        key="contract_delete_btn",
                     ):
                         with st.spinner("Deleting contract..."):
                             _, err = api_delete(f"/contracts/{contract_id}")
@@ -70,6 +98,7 @@ def contracts_page():
                                 st.success("✅ Contract deleted successfully!")
                                 time.sleep(0.5)
                                 st.rerun()
+
         else:
             st.info("ℹ️ No contracts found. Create your first contract to get started!")
 
@@ -77,10 +106,9 @@ def contracts_page():
     with tab2:
         st.markdown("### 📝 Create New Contract")
 
-        # Load customers
         customers, cust_error = api_get("/customers")
         contracts, _ = api_get("/contracts")
-        
+
         if cust_error:
             st.error("❌ Failed to load customers")
             return
@@ -89,24 +117,26 @@ def contracts_page():
             st.warning("⚠ No customers exist. Create a customer before making a contract.")
             return
 
-        # Filter out customers with active contracts
-        active_customer_ids = []
-        if contracts:
-            active_customer_ids = [c['customer_id'] for c in contracts if c.get('status') == 'active']
-        
-        available_customers = [c for c in customers if c['customer_id'] not in active_customer_ids]
+        active_customer_ids = [
+            c["customer_id"] for c in contracts if c.get("status") == "active"
+        ] if contracts else []
+
+        available_customers = [
+            c for c in customers if c["customer_id"] not in active_customer_ids
+        ]
 
         if not available_customers:
             st.warning("⚠ No available customers. All customers already have active contracts.")
-            st.info("💡 Tip: Delete an existing contract or add a new customer to create a contract.")
             return
 
-        customer_options = {f"{c['name']} {c['last_name']} ({c['email']})": c for c in available_customers}
+        customer_options = {
+            f"{c['name']} {c['last_name']} ({c['email']})": c
+            for c in available_customers
+        }
 
         selected_customer = st.selectbox("👤 Select Customer *", list(customer_options.keys()))
         customer = customer_options[selected_customer]
 
-        # Load cars
         cars, car_error = api_get("/cars")
         if car_error:
             st.error("❌ Failed to load cars")
@@ -118,44 +148,44 @@ def contracts_page():
             st.warning("⚠ No available cars. All cars are rented or under maintenance.")
             return
 
-        car_options = {f"{c['brand']} {c['model']} – {c['license_plate']}": c for c in available_cars}
+        car_options = {
+            f"{c['brand']} {c['model']} – {c['license_plate']}": c
+            for c in available_cars
+        }
 
         selected_car = st.selectbox("🚗 Select Available Car *", list(car_options.keys()))
         car = car_options[selected_car]
 
-        # Contract period
         st.markdown("### 📅 Contract Period")
-        col7, col8 = st.columns(2)
+        col1, col2 = st.columns(2)
 
-        with col7:
+        with col1:
             start_date = st.date_input("Start Date *", value=datetime.now().date())
-        with col8:
+        with col2:
             end_date = st.date_input("End Date *", value=datetime.now().date())
 
         if start_date and end_date:
             duration = (end_date - start_date).days
             st.markdown(
-                f"<p style='color: #0ea5e9; font-weight: 600; margin-top: 0.5rem;'>"
+                f"<p style='color:#0ea5e9; font-weight:600;'>"
                 f"Contract Duration: {duration} days ({duration // 30} months)"
                 f"</p>",
                 unsafe_allow_html=True,
             )
 
-        # Subscription price
         st.markdown("### 💰 Subscription Details")
-
-        sub_price_per_month = car.get('sub_price_per_month', 0)
+        sub_price_per_month = car.get("sub_price_per_month", 0)
 
         st.markdown(
-            f"<p style='font-size: 1.1rem; margin-bottom: 0.5rem;'>"
-            f"Subscription price per month: <strong style='color: #0ea5e9;'>{sub_price_per_month:,} DKK</strong>"
+            f"<p style='font-size:1.1rem;'>"
+            f"Subscription price per month: "
+            f"<strong style='color:#0ea5e9;'>{sub_price_per_month:,} DKK</strong>"
             f"</p>",
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
-        st.info(f"💡 This is the standard price for the {car['brand']} {car['model']}")
+        st.info(f"💡 Standard price for the {car['brand']} {car['model']}")
 
-        # Submit button
         st.markdown("<br>", unsafe_allow_html=True)
         _, col_btn, _ = st.columns([1, 1, 1])
 
