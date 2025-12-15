@@ -11,6 +11,7 @@ def home():
         "desc": "customer info endpoint!!!!"
     })
 
+# fetch all customers
 @app.route('/customers', methods=["GET"])
 def get_customers():
     try:
@@ -22,7 +23,8 @@ def get_customers():
             "Success": False,
             "error": str(e)
         })
-    
+
+# add a new customer
 @app.route('/customers', methods=["POST"])
 def add_customer():
     try:
@@ -107,7 +109,6 @@ def delete_customer_route(customer_id):
         if customer is None:
             return jsonify({"Error": "Customer not found"}), 404
         
-        # delete contracts before customer is deleted and set car to available
         delete_customer_contracts(customer_id)
 
         delete_customer(customer_id)

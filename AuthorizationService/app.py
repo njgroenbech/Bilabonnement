@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET")
 jwt = JWTManager(app)
 
-# Denne funktion bruges kun til at exchange tokens baseret på rollen.
+# This endpoint handles user login and JWT token generation
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json() or {}

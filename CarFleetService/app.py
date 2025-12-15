@@ -88,7 +88,7 @@ def fetch_car_by_brand(brand):
     try:
         car_by_brand = get_cars_by_brand(brand)
 
-        if len(car_by_brand) == 0: # if it returns an empty list
+        if len(car_by_brand) == 0:
             return jsonify({
                 "error": "Brand doesn't exist"
             }), 404

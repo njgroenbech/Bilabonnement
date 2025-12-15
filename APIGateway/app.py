@@ -6,7 +6,6 @@ from flask_jwt_extended import JWTManager, jwt_required, get_jwt
 
 app = Flask(__name__)
 
-
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET")
 jwt = JWTManager(app)
 
@@ -225,7 +224,7 @@ def delete_contract_gateway(contract_id):
 
 # DAMAGE REPORT ROUTE
 @app.route("/damagecheck", methods=["POST"])
-
+@jwt_required()
 def damage_check():
 
     files = []

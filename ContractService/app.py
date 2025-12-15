@@ -4,7 +4,6 @@ from contract_post_helpers import get_or_create_customer, get_available_car_id, 
 
 app = Flask(__name__)
 
-# test 
 @app.route('/')
 def home():
     return jsonify({
@@ -42,13 +41,13 @@ def delete_contract_route(contract_id):
         if not contract_to_delete:
             return jsonify({"success": False, "error": "Contract not found"}), 404
 
-        # hent car_id FØR sletning
+        # Get car_id from the contract before deleting
         car_id = contract_to_delete['car_id']
 
-        # slet kontrakten
+        # delete the contract
         delete_contract(contract_id)
 
-        # frigiv bilen igen
+        # update car status to available
         update_car_status(car_id, status="available")
 
         return jsonify({"success": True}), 200

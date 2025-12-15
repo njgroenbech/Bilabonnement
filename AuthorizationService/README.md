@@ -33,4 +33,3 @@
 
 ## Output
 JSON med `JWT_token`, `token_type` og `role`.
-

@@ -1,6 +1,7 @@
 import mysql.connector
 import os
 
+# Database connection setup
 def get_connection():
     return mysql.connector.connect(
         host=os.getenv("MYSQL_HOST", "contract-db"),
@@ -9,6 +10,7 @@ def get_connection():
         database=os.getenv("MYSQL_DB", "contract_db")
     )
 
+# CRUD Operations for Contracts
 def get_all_contracts():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
@@ -21,6 +23,7 @@ def get_all_contracts():
 
     return rows
 
+# Create a new contract
 def create_contract(customer_id, car_id, start_date, end_date, sub_price_per_month):
     conn = get_connection()
     cursor = conn.cursor()
@@ -35,6 +38,7 @@ def create_contract(customer_id, car_id, start_date, end_date, sub_price_per_mon
     
     return contract_id
 
+# Delete a contract by ID
 def delete_contract(contract_id):
     conn = get_connection()
     cursor = conn.cursor()

@@ -9,6 +9,7 @@ def get_connection():
         database=os.getenv("MYSQL_DB", "customer_information_db")
     )
 
+# get all customers
 def get_all_customers():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
@@ -62,6 +63,7 @@ def get_customer_id_by_email(email):
     conn.close()
     return res
 
+# delete customer by id
 def delete_customer(customer_id):
     conn = get_connection()
     cursor = conn.cursor()

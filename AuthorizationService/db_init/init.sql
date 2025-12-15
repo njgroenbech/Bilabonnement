@@ -9,4 +9,3 @@ CREATE TABLE IF NOT EXISTS `users` (
 
 INSERT INTO `users` (username, password, role) VALUES ('admin', 'password', 'admin');
 INSERT INTO `users` (username, password, role) VALUES ('employee', 'password', 'employee');
-
