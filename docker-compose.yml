@@ -33,7 +33,6 @@ services:
       - JWT_SECRET=${JWT_SECRET}
     networks:
       - microservices-network
-
       
   carfleet-service:
     container_name: carfleet_service
@@ -147,10 +146,33 @@ services:
       context: ./DamageReportService
       dockerfile: Dockerfile
     ports:
-      - "5006:5006"
+      - "5006:5006" 
     volumes:
       - ./DamageReportService:/app
+    environment:
+      MYSQL_HOST: damage-report-db
+      MYSQL_USER: user_db
+      MYSQL_PASSWORD: password
+      MYSQL_DB: damage_report_db
+    depends_on:
+      - damage-report-db
     networks: 
+      - microservices-network
+
+  damage-report-db:
+    container_name: mysql_damage_report_db
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: damage123
+      MYSQL_DATABASE: damage_report_db
+      MYSQL_USER: user_db
+      MYSQL_PASSWORD: password
+    ports:
+      - "3310:3306"
+    volumes:
+      - damage-report-db:/var/lib/mysql
+      - ./DamageReportService/db_init:/docker-entrypoint-initdb.d
+    networks:
       - microservices-network
 
   frontend-service:
@@ -169,6 +191,7 @@ volumes:
   carfleet-db:
   contract-db:
   customer-information-db:
+  damage-report-db:
 
 networks:
   microservices-network:

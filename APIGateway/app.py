@@ -221,6 +221,7 @@ def delete_contract_gateway(contract_id):
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 # DAMAGE REPORT ROUTE
 @app.route("/damagecheck", methods=["POST"])
 
@@ -233,12 +234,28 @@ def damage_check():
             (file_storage.filename, file_storage.stream, file_storage.mimetype)
         ))
 
+    form_data = {
+        "contract_id": request.form.get("contract_id"),
+        "car_id": request.form.get("car_id")
+    }
+
     try:
-        resp = requests.post(f"{DAMAGE_SERVICE_URL}/damagecheck", files=files)
+        resp = requests.post(f"{DAMAGE_SERVICE_URL}/damagecheck", files=files, data=form_data)
         return jsonify(resp.json()), resp.status_code
     except Exception as e:
         return jsonify({"error": f"Failed to reach damage-report-service: {e}"}), 502
     
+# endpoint for getting damage reports
+@app.route('/reports', methods = ["GET"])
+@jwt_required()
+def get_damage_reports():
+    try:
+        response = requests.get(f"{DAMAGE_SERVICE_URL}/reports")
+
+        return jsonify(response.json()), response.status_code
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)

@@ -1,6 +1,7 @@
 import requests
 import streamlit as st
 from components.ui_components import render_page_header
+from api.api_client import api_get
 
 DAMAGE_CHECK_URL = "http://gateway:5001/damagecheck"
 
@@ -8,6 +9,33 @@ def ai_damage_page():
     render_page_header(
         "🧠 AI Damage Check",
         "Upload one or more car images and get a simulated damage assessment.",
+    )
+
+    # fetch contracts
+    contracts, _ = api_get("/contracts")
+    cars, _ = api_get("/cars")
+
+    # build car dict
+    car_dict = {}
+    if cars:
+        for car in cars:
+            car_dict[car["car_id"]] = f"{car['brand']} {car['model']}"
+
+    # build contract options
+    contract_options = {}
+    for contract in contracts:
+        if contract.get("status") == "active":
+            car_name = car_dict.get(contract["car_id"], "Unknown Car")
+            label = f"Contract #{contract['contract_id']} - {car_name}"
+            contract_options[label] = contract
+            
+    selected_contract_key = st.selectbox("📄 Select Contract *", list(contract_options.keys()))
+    selected_contract = contract_options[selected_contract_key]
+
+    # display selected ids for report
+    st.info(
+        f"🚗 Car ID: {selected_contract['car_id']} | "
+        f"👤 Customer ID: {selected_contract['customer_id']}"
     )
 
     uploaded_files = st.file_uploader(
@@ -21,10 +49,17 @@ def ai_damage_page():
             st.warning("Please upload at least one image.")
             return
 
+        # add image file to payload
         files = [("images", (f.name, f.getvalue(), f.type)) for f in uploaded_files]
 
+        # add contract and car id to payload
+        data = {
+            "contract_id": selected_contract["contract_id"],
+            "car_id": selected_contract["car_id"]
+        }
+
         try:
-            resp = requests.post(DAMAGE_CHECK_URL, files=files, timeout=30)
+            resp = requests.post(DAMAGE_CHECK_URL, files=files, data=data, timeout=30)
         except Exception as e:
             st.error(f"Could not reach API Gateway: {e}")
             return
@@ -33,9 +68,10 @@ def ai_damage_page():
             st.error(f"Backend error ({resp.status_code}): {resp.text}")
             return
 
-        data = resp.json()
-        status = data.get("overall_status")
-        message = data.get("message", "")
+        res = resp.json()
+        status = res.get("overall_status")
+        message = res.get("message", "")
+        report_id = res.get("report_id")
 
         if status == "unclear":
             st.warning(f"🟡 {message}")
@@ -43,9 +79,12 @@ def ai_damage_page():
             st.success(f"🟢 {message}")
         elif status == "damage_found":
             st.error(f"🔴 {message}")
-            level = data.get("damage_level")
+            level = res.get("damage_level")
             if level:
-                st.info(f"Damage level: {level.get('label', level.get('key', 'unknown'))}")
+                st.info(f"Damage level: {level}")
         else:
             st.info("Unknown response:")
-            st.json(data)
+            st.json(res)
+
+        if report_id:
+            st.success(f"✅ Report saved with ID: {report_id}")
