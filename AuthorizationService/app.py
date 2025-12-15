@@ -1,17 +1,14 @@
-# AuthorizationService/app.py
-
 from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token
 import os
+from db import validate_user
 
 app = Flask(__name__)
 
-app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET", "dev-secret")
+app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET")
 jwt = JWTManager(app)
-USERS = {
-    "admin": {"password": "password", "role": "admin"},
-    "user": {"password": "password", "role": "user"},
-}
+
+# Denne funktion bruges kun til at exchange tokens baseret på rollen.
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -19,19 +16,18 @@ def login():
     username = data.get("username")
     password = data.get("password")
 
-    user = USERS.get(username)
-    if not user or user.get("password") != password:
+
+    if not username or not password:
+        return jsonify({"error": "username and password required"}), 400
+
+    role = validate_user(username, password)
+
+    if not role:
         return jsonify({"error": "invalid credentials"}), 401
 
-    role = user["role"]
+    token = create_access_token(identity=username, additional_claims={"role": role})
 
-    # identity becomes "sub" internally; role is stored in claims
-    token = create_access_token(
-        identity=username,
-        additional_claims={"role": role}
-    )
-
-    return jsonify({"JWT_token": token, "token_type": "bearer"}), 200
+    return jsonify({"JWT_token": token, "token_type": "bearer", "role": role}), 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002, debug=True)

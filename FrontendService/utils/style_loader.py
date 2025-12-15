@@ -7,7 +7,7 @@ def load_global_css():
     css_path = project_root / "global_styles.css"
 
     if not css_path.exists():
-        st.error(f"❌ Global CSS file not found: {css_path}")
+        st.error(f"Global CSS file not found: {css_path}")
         return
 
     with open(css_path, "r") as f:

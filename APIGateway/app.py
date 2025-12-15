@@ -23,13 +23,14 @@ def home():
     return jsonify({
         "service": "API Gateway",
         "status": "running",
-        "routes": ["/auth/login","/cars", "/customers", "/contracts", "/damagecheck"] # add auth and damagereport
+        "routes": ["/auth/login","/cars", "/customers", "/contracts", "/damagecheck"]
     }), 200
+
 # Login Service route
 @app.route("/auth/login", methods=["POST"])
 def login():
     try:
-        r = requests.post(f"{AUTH_URL}/login", json=request.get_json(), timeout=5)
+        r = requests.post(f"{AUTH_URL}/login", json=request.get_json())
         return jsonify(r.json()), r.status_code
     except Exception as e:
         return jsonify({"error": f"auth service not reachable: {e}"}), 502
