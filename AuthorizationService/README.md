@@ -32,5 +32,5 @@
   ```
 
 ## Output
-JSON med `JWT_token` (bruges i frontend), `token_type` og `role`.
+JSON med `JWT_token`, `token_type` og `role`.
 

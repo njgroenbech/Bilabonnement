@@ -39,6 +39,22 @@ services:
     networks:
       - microservices-network
 
+  authorization-db:
+    container_name: mysql_authorization_db
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: authrootpw
+      MYSQL_DATABASE: authorization_db
+      MYSQL_USER: user_db
+      MYSQL_PASSWORD: password
+    ports:
+      - "3305:3306"
+    volumes:
+      - authorization-db:/var/lib/mysql
+      - ./AuthorizationService/db_init:/docker-entrypoint-initdb.d
+    networks:
+      - microservices-network
+
       
   carfleet-service:
     container_name: carfleet_service
@@ -143,22 +159,6 @@ services:
     volumes:
       - customer-information-db:/var/lib/mysql
       - ./CustomerInformationService/db_init:/docker-entrypoint-initdb.d
-    networks:
-      - microservices-network
-
-  authorization-db:
-    container_name: mysql_authorization_db
-    image: mysql:latest
-    environment:
-      MYSQL_ROOT_PASSWORD: authrootpw
-      MYSQL_DATABASE: authorization_db
-      MYSQL_USER: user_db
-      MYSQL_PASSWORD: password
-    ports:
-      - "3310:3306"
-    volumes:
-      - authorization-db:/var/lib/mysql
-      - ./AuthorizationService/db_init:/docker-entrypoint-initdb.d
     networks:
       - microservices-network
 

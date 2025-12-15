@@ -1,7 +1,5 @@
 import os
-from typing import Optional
 import mysql.connector
-from mysql.connector import Error
 
 def get_connection():
     return mysql.connector.connect(
@@ -24,6 +22,8 @@ def get_user(username):
 
 def validate_user(username, password):
     user = get_user(username)
-
-    if user.get("password") == password:
+    
+    if user and user.get("password") == password:
         return user.get("role")
+    
+    return None

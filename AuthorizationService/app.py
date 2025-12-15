@@ -1,5 +1,3 @@
-# AuthorizationService/app.py
-
 from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token
 import os
@@ -14,9 +12,10 @@ jwt = JWTManager(app)
 
 @app.route("/login", methods=["POST"])
 def login():
-    data = request.get_json()
+    data = request.get_json() or {}
     username = data.get("username")
     password = data.get("password")
+
 
     if not username or not password:
         return jsonify({"error": "username and password required"}), 400

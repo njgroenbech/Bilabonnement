@@ -23,8 +23,9 @@ def home():
     return jsonify({
         "service": "API Gateway",
         "status": "running",
-        "routes": ["/auth/login","/cars", "/customers", "/contracts", "/damagecheck"] # add auth and damagereport
+        "routes": ["/auth/login","/cars", "/customers", "/contracts", "/damagecheck"]
     }), 200
+
 # Login Service route
 @app.route("/auth/login", methods=["POST"])
 def login():
