@@ -17,7 +17,6 @@ def _auth_headers() -> Dict[str, str]:
 
 # API Client functions
 def api_get(endpoint: str) -> Tuple[Optional[List[Dict[str, Any]]], Optional[str]]:
-    """Perform GET request to API gateway"""
     try:
         response = requests.get(
             f"{GATEWAY_URL}{endpoint}",
@@ -36,7 +35,6 @@ def api_get(endpoint: str) -> Tuple[Optional[List[Dict[str, Any]]], Optional[str
 
 # API Client functions
 def api_post(endpoint: str, data: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
-    """Perform POST request to API gateway"""
     try:
         response = requests.post(
             f"{GATEWAY_URL}{endpoint}",
@@ -56,7 +54,6 @@ def api_post(endpoint: str, data: Dict[str, Any]) -> Tuple[Optional[Dict[str, An
 
 # API Client functions
 def api_delete(endpoint: str) -> Tuple[bool, Optional[str]]:
-    """Perform DELETE request to API gateway"""
     try:
         response = requests.delete(
             f"{GATEWAY_URL}{endpoint}",
@@ -75,10 +72,6 @@ def api_delete(endpoint: str) -> Tuple[bool, Optional[str]]:
 
 # Health check function
 def check_api_health() -> Tuple[bool, str]:
-    """
-    Check om gateway er reachable.
-    I jeres gateway har I "/" som health-like endpoint (ikke /health).
-    """
     try:
         response = requests.get(
             f"{GATEWAY_URL}/",

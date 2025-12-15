@@ -53,7 +53,6 @@ def _generate_monthly_data(parsed_contracts):
 
 # Create monthly revenue line chart
 def create_monthly_revenue_line_chart(contracts):
-    """Create monthly revenue line chart"""
     if not contracts:
         return None
 
@@ -107,7 +106,6 @@ def create_monthly_revenue_line_chart(contracts):
 
 # Create brand revenue bar chart
 def create_brand_revenue_bar_chart(active_contracts, cars):
-    """Create bar chart showing revenue by car brand"""
     if not active_contracts or not cars:
         return None
 
@@ -172,7 +170,6 @@ def create_brand_revenue_bar_chart(active_contracts, cars):
 
 # Render section header
 def _render_section_header(emoji, title, subtitle):
-    """Render a section header with emoji, title and subtitle"""
     st.markdown(
         f"""
         <div style="margin-top: 4rem;"> 
@@ -189,7 +186,6 @@ def _render_section_header(emoji, title, subtitle):
 
 # Dashboard Page
 def dashboard_page():
-    """Dashboard Overview Page"""
     render_page_header(
         "📊 Dashboard Overview",
         "Welcome to your car subscription management system",

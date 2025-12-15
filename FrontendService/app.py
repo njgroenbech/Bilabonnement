@@ -16,6 +16,7 @@ from pages.contracts_page import contracts_page
 from pages.dashboard_page import dashboard_page
 from pages.ai_damage_page import ai_damage_page
 from pages.login_page import login_page
+
 load_global_css()
 
 # Router init
