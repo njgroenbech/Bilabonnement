@@ -2,6 +2,7 @@ import requests
 import streamlit as st
 from components.ui_components import render_page_header
 from api.api_client import api_get
+from api.api_client import _auth_headers
 
 DAMAGE_CHECK_URL = "http://gateway:5001/damagecheck"
 
@@ -59,7 +60,7 @@ def ai_damage_page():
         }
 
         try:
-            resp = requests.post(DAMAGE_CHECK_URL, files=files, data=data, timeout=30)
+            resp = requests.post(DAMAGE_CHECK_URL, files=files, data=data, headers=_auth_headers(), timeout=30)
         except Exception as e:
             st.error(f"Could not reach API Gateway: {e}")
             return

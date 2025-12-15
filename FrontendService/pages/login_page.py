@@ -1,4 +1,3 @@
-# FrontendService/pages/login_page.py
 import requests
 import streamlit as st
 from components.ui_components import render_page_header

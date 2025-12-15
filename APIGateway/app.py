@@ -52,10 +52,6 @@ def get_all_cars():
 @app.route("/cars", methods=["POST"])
 @jwt_required() 
 def add_car():
-     # admin only
-    claims = get_jwt()
-    if claims.get("role") != "admin":
-        return jsonify({"error": "forbidden: admin only"}), 403
     try:
         response = requests.post(f"{CARFLEET_URL}/cars", json=request.get_json())
 
@@ -80,10 +76,6 @@ def get_car_by_id(car_id):
 @app.route("/cars/<car_id>/status", methods=["PATCH"])
 @jwt_required() 
 def update_car_status(car_id):
-         # admin only
-    claims = get_jwt()
-    if claims.get("role") != "admin":
-        return jsonify({"error": "forbidden: admin only"}), 403
     try:
         response = requests.patch(f"{CARFLEET_URL}/cars/{car_id}/status", json=request.get_json())
 
@@ -96,10 +88,6 @@ def update_car_status(car_id):
 @app.route("/cars/<car_id>", methods=["DELETE"])
 @jwt_required() 
 def delete_car_gateway(car_id):
-       # admin only
-    claims = get_jwt()
-    if claims.get("role") != "admin":
-        return jsonify({"error": "forbidden: admin only"}), 403
     try:
         response = requests.delete(f"{CARFLEET_URL}/cars/{car_id}")
         
@@ -125,10 +113,6 @@ def get_customers():
 @app.route("/customers", methods=["POST"])
 @jwt_required()
 def add_customer():
-        # admin only
-    claims = get_jwt()
-    if claims.get("role") != "admin":
-        return jsonify({"error": "forbidden: admin only"}), 403
     try:
         response = requests.post(f"{CUSTOMER_URL}/customers", json=request.get_json())
 
@@ -165,10 +149,6 @@ def get_customer_by_email(email):
 @app.route("/customers/<customer_id>", methods=["DELETE"])
 @jwt_required()
 def delete_customer_gateway(customer_id):
-        # admin only
-    claims = get_jwt()
-    if claims.get("role") != "admin":
-        return jsonify({"error": "forbidden: admin only"}), 403
     try:
         response = requests.delete(f"{CUSTOMER_URL}/customers/{customer_id}")
 
@@ -194,11 +174,6 @@ def get_contracts():
 @app.route("/contracts", methods=["POST"])
 @jwt_required()
 def create_contract():
-     # admin only
-    claims = get_jwt()
-    if claims.get("role") != "admin":
-        return jsonify({"error": "forbidden: admin only"}), 403
-
     try:
         response = requests.post(f"{CONTRACT_URL}/contracts", json=request.get_json())
 
@@ -211,10 +186,6 @@ def create_contract():
 @app.route("/contracts/<int:contract_id>", methods=["DELETE"])
 @jwt_required()
 def delete_contract_gateway(contract_id):
-      # admin only
-    claims = get_jwt()
-    if claims.get("role") != "admin":
-        return jsonify({"error": "forbidden: admin only"}), 403
     try:
         response = requests.delete(f"{CONTRACT_URL}/contracts/{contract_id}")
 
@@ -225,7 +196,7 @@ def delete_contract_gateway(contract_id):
 
 # DAMAGE REPORT ROUTE
 @app.route("/damagecheck", methods=["POST"])
-
+@jwt_required()
 def damage_check():
 
     files = []

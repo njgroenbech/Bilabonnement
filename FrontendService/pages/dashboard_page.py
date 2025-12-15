@@ -237,6 +237,11 @@ def dashboard_page():
         with col4:
             display_status_badge("Utilization", f"{utilization}%", "#0ea5e9")
 
+    role = st.session_state.get("role")
+
+    if role != "admin":
+        st.stop()
+
     # Key Business Insights Section
     _render_section_header(
         "📈",
