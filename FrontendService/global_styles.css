@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* CSS Variables for reusability */
+/* CSS Variables for reusability: DETTE ER LAVET VED HJÆLP AF AI til style streamlit defaults*/
 :root {
     --color-primary: #0ea5e9;
     --color-primary-dark: #0284c7;
