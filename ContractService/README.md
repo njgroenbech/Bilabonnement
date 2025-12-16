@@ -28,6 +28,7 @@ Henter alle kontrakter.
 
 **POST /contracts**  
 Opretter en ny kontrakt.  
+Denne datastrutur er også forventet i vores udfyldningsmulighed i hjemmesiden
 Body eksempel:
 
 ```json

@@ -34,6 +34,7 @@ Henter alle biler i flåden.
 
 **POST /cars**  
 Tilføjer en ny bil til flåden.  
+Denne datastrutur er også forventet i vores udfyldningsmulighed i hjemmesiden
 Body eksempel:
 ```json
 {

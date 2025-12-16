@@ -31,7 +31,7 @@ Henter alle kunder.
 
 **POST /customers**  
 Opretter en ny kunde.  
-Body eksempel, kan også bruges i vores grænseoverflade
+Body eksempel, Denne datastrutur er også forventet i vores udfyldningsmulighed i hjemmesiden
 ```json
 {
   "name": "Anders",
