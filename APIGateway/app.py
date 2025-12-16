@@ -6,6 +6,7 @@ from flask_jwt_extended import JWTManager, jwt_required, get_jwt
 
 app = Flask(__name__)
 
+# JWT
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET")
 jwt = JWTManager(app)
 
@@ -15,6 +16,7 @@ CUSTOMER_URL = "http://customer-information-service:5005"
 CONTRACT_URL = "http://contract-service:5004"
 DAMAGE_SERVICE_URL = "http://damage-report-service:5006"
 AUTH_URL = "http://authorization-service:5002"
+
 
 # Health Check Endpoint
 @app.route("/")
