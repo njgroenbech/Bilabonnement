@@ -97,7 +97,7 @@ Go to: http://localhost:3000
 **(Beware: If you have any other service running on port 3000, you will get errors)**
 
 **Login credentials:**
-- Username: `admin`
+- Username: `admin` or `employee`
 - Password: `password`
 
 You are now logged into the **Bilabonnement dashboard**.
