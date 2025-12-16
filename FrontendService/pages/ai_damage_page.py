@@ -81,8 +81,6 @@ def ai_damage_page():
         elif status == "damage_found":
             st.error(f"🔴 {message}")
             level = res.get("damage_level")
-            if level:
-                st.info(f"Damage level: {level}")
         else:
             st.info("Unknown response:")
             st.json(res)
